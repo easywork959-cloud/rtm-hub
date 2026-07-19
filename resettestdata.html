@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RTM Hub · ลบข้อมูลทดสอบ (เครื่องมือครั้งเดียว)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root { --cream:#FAF7F2; --card:#FFF; --ink:#2C2A26; --ink2:#6B655A; --border:#E6DFD1; --sage:#7A9B7E; --terra:#C87565; --danger:#8C3E30; }
+    * { box-sizing: border-box; }
+    body { font-family:"IBM Plex Sans Thai",system-ui,sans-serif; background:var(--cream); color:var(--ink); margin:0; padding:24px; line-height:1.5; }
+    .wrap { max-width:720px; margin:0 auto; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:16px; }
+    h1 { font-size:1.5rem; margin:0 0 4px; }
+    .sub { color:var(--ink2); margin:0 0 16px; }
+    .warn { background:#F2DDD5; border-left:4px solid var(--danger); padding:12px 16px; border-radius:10px; color:var(--danger); font-size:.9rem; margin:12px 0; }
+    button { font:inherit; cursor:pointer; border:none; border-radius:10px; padding:12px 20px; font-weight:600; }
+    .btn-sage { background:var(--sage); color:#fff; }
+    .btn-danger { background:var(--terra); color:#fff; }
+    .btn-danger:disabled { opacity:.4; cursor:not-allowed; }
+    .btn-ghost { background:#F2EDE3; color:var(--ink); }
+    input[type=text] { font:inherit; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; width:180px; }
+    #log { background:#2C2A26; color:#DCE7DD; font-family:ui-monospace,monospace; font-size:.8rem; padding:14px; border-radius:10px; height:280px; overflow:auto; white-space:pre-wrap; margin-top:12px; }
+    .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-top:12px; }
+    .muted { color:var(--ink2); font-size:.85rem; }
+    code { background:#F2EDE3; padding:1px 6px; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🧹 ลบข้อมูลทดสอบ RTM Hub</h1>
+      <p class="sub">เครื่องมือ <b>ครั้งเดียวก่อน go-live</b> — แยกจากแอปหลัก ใช้เสร็จลบไฟล์นี้ทิ้ง</p>
+      <div class="warn">
+        ⚠️ <b>ลบถาวร กู้ไม่ได้</b> · จะลบ: ideas · projects (+ milestones/actions) · sessions · check-ins · lessons<br />
+        ✅ <b>เก็บไว้:</b> users (โปรไฟล์ 4 คน + allowlist) — ไม่ลบ
+      </div>
+      <div id="auth">
+        <button id="btn-login" class="btn-sage">เข้าสู่ระบบด้วย Google</button>
+        <p class="muted" id="auth-status">ต้อง login ด้วยอีเมลที่อยู่ใน allowlist ก่อน</p>
+      </div>
+    </div>
+
+    <div class="card" id="panel" style="display:none">
+      <div class="row">
+        <button id="btn-scan" class="btn-ghost">1 · สแกนนับข้อมูล</button>
+        <span class="muted" id="scan-result"></span>
+      </div>
+      <div class="row">
+        <span>2 · พิมพ์ <code>ลบ</code> เพื่อยืนยัน:</span>
+        <input type="text" id="confirm-input" placeholder="พิมพ์ ลบ" autocomplete="off" />
+        <button id="btn-delete" class="btn-danger" disabled>ลบข้อมูลทดสอบทั้งหมด</button>
+      </div>
+      <div id="log">รอเริ่ม...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, doc, getDocs, deleteDoc }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC1ViE5rJ0lADkU-7haInW-0lbYQr7XzmU",
+      authDomain: "rtm-hub-bd668.firebaseapp.com",
+      projectId: "rtm-hub-bd668",
+      storageBucket: "rtm-hub-bd668.firebasestorage.app",
+      messagingSenderId: "633629861435",
+      appId: "1:633629861435:web:e5096aa44cbda8702a9e1e",
+    };
+    const ALLOWLIST = new Set([
+      "pojaman.j@gmail.com", "thapanik.p@gmail.com", "jamee.pt@gmail.com", "easywork959@gmail.com",
+    ]);
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const F = { collection, doc, getDocs, deleteDoc };
+
+    const $ = s => document.querySelector(s);
+    const logEl = $("#log");
+    const log = (m) => { logEl.textContent += "\n" + m; logEl.scrollTop = logEl.scrollHeight; };
+
+    // ---- core (testable) ----
+    async function scanCounts(db, F) {
+      const { collection, getDocs } = F;
+      const out = {};
+      for (const c of ["ideas", "projects", "sessions", "lessons"]) out[c] = (await getDocs(collection(db, c))).size;
+      let ms = 0, ac = 0, ck = 0;
+      const projs = await getDocs(collection(db, "projects"));
+      for (const p of projs.docs) {
+        ms += (await getDocs(collection(db, "projects", p.id, "milestones"))).size;
+        ac += (await getDocs(collection(db, "projects", p.id, "actions"))).size;
+      }
+      const users = await getDocs(collection(db, "users"));
+      for (const u of users.docs) ck += (await getDocs(collection(db, "users", u.id, "checkins"))).size;
+      out.milestones = ms; out.actions = ac; out.checkins = ck; out.users_kept = users.size;
+      return out;
+    }
+
+    async function resetTestData(db, F, log) {
+      const { collection, doc, getDocs, deleteDoc } = F;
+      let n = 0;
+      const projs = await getDocs(collection(db, "projects"));
+      for (const p of projs.docs) {
+        for (const sub of ["milestones", "actions"]) {
+          const s = await getDocs(collection(db, "projects", p.id, sub));
+          for (const d of s.docs) { await deleteDoc(doc(db, "projects", p.id, sub, d.id)); n++; log(`  ลบ ${sub}/${d.id}`); }
+        }
+        await deleteDoc(doc(db, "projects", p.id)); n++; log(`ลบ project ${p.id}`);
+      }
+      const users = await getDocs(collection(db, "users"));
+      for (const u of users.docs) {
+        const s = await getDocs(collection(db, "users", u.id, "checkins"));
+        for (const d of s.docs) { await deleteDoc(doc(db, "users", u.id, "checkins", d.id)); n++; log(`  ลบ check-in ${u.id}/${d.id}`); }
+      }
+      for (const c of ["ideas", "sessions", "lessons"]) {
+        const s = await getDocs(collection(db, c));
+        for (const d of s.docs) { await deleteDoc(doc(db, c, d.id)); n++; log(`ลบ ${c}/${d.id}`); }
+      }
+      log(`\n✅ เสร็จ · ลบ ${n} docs · เก็บ users ${users.size} คน (ไม่แตะ)`);
+      return n;
+    }
+    window.__RESET = { scanCounts, resetTestData };
+
+    // ---- UI wiring ----
+    $("#btn-login").addEventListener("click", async () => {
+      try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+      catch (e) { $("#auth-status").textContent = "login ล้มเหลว: " + e.message; }
+    });
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) return;
+      if (!ALLOWLIST.has(user.email)) {
+        $("#auth-status").textContent = "❌ " + user.email + " ไม่อยู่ใน allowlist — ลบไม่ได้";
+        return;
+      }
+      $("#auth-status").textContent = "✅ login: " + user.email;
+      $("#btn-login").style.display = "none";
+      $("#panel").style.display = "block";
+      log("พร้อม · login เป็น " + user.email);
+    });
+
+    $("#btn-scan").addEventListener("click", async () => {
+      $("#scan-result").textContent = "กำลังสแกน...";
+      try {
+        const c = await scanCounts(db, F);
+        $("#scan-result").textContent =
+          `ideas ${c.ideas} · projects ${c.projects} (ms ${c.milestones}/ac ${c.actions}) · sessions ${c.sessions} · check-ins ${c.checkins} · lessons ${c.lessons} · เก็บ users ${c.users_kept}`;
+        log("สแกน: " + JSON.stringify(c));
+      } catch (e) { log("สแกนล้มเหลว: " + e.message); }
+    });
+
+    $("#confirm-input").addEventListener("input", (e) => {
+      $("#btn-delete").disabled = e.target.value.trim() !== "ลบ";
+    });
+
+    $("#btn-delete").addEventListener("click", async () => {
+      if ($("#confirm-input").value.trim() !== "ลบ") return;
+      $("#btn-delete").disabled = true;
+      logEl.textContent = "เริ่มลบ...";
+      try {
+        await resetTestData(db, F, log);
+        $("#scan-result").textContent = "ลบเสร็จแล้ว — กดสแกนซ้ำเพื่อยืนยันว่าเหลือ 0";
+      } catch (e) { log("❌ ลบล้มเหลว: " + e.message); $("#btn-delete").disabled = false; }
+    });
+  </script>
+</body>
+</html>
