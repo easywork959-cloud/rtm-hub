@@ -796,6 +796,126 @@
     }
     .rtm-summary > div { margin: 2px 0; }
 
+    /* ===== STEP 11 · A11Y (focus ring + reduced motion) ===== */
+    :focus:not(:focus-visible) { outline: none; }
+    button:focus-visible, a:focus-visible, input:focus-visible,
+    select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible,
+    [role="button"]:focus-visible {
+      outline: 3px solid var(--sage);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    /* ===== STEP 11 · BUTTONS (secondary/danger for dialogs) ===== */
+    .btn-secondary {
+      padding: 10px 18px;
+      background: var(--bg-subtle);
+      color: var(--ink-primary);
+      border-radius: var(--radius-md);
+      font-weight: 500;
+    }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-danger {
+      padding: 10px 18px;
+      background: var(--terracotta);
+      color: #fff;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+    }
+    .btn-danger:hover { background: #B4604F; }
+    .btn-danger:disabled, .btn-secondary:disabled { opacity: .55; cursor: not-allowed; }
+
+    /* ===== STEP 11 · TOAST ===== */
+    #toast-root {
+      position: fixed;
+      z-index: 400;
+      bottom: var(--space-5);
+      right: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      max-width: min(360px, calc(100vw - 32px));
+      pointer-events: none;
+    }
+    .rtm-toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-2);
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--ink-tertiary);
+      box-shadow: 0 6px 20px rgba(44,42,38,.16);
+      font-size: var(--text-sm);
+      color: var(--ink-primary);
+      animation: rtm-toast-in .18s ease;
+    }
+    @keyframes rtm-toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .rtm-toast-success { border-left-color: var(--sage); }
+    .rtm-toast-error   { border-left-color: var(--terracotta); background: var(--terra-soft); }
+    .rtm-toast-warn    { border-left-color: var(--peach); background: var(--peach-soft); }
+    .rtm-toast-info    { border-left-color: var(--plum); }
+    .rtm-toast-icon { flex: 0 0 auto; line-height: 1.4; }
+    .rtm-toast-msg { flex: 1 1 auto; line-height: 1.4; word-break: break-word; }
+    .rtm-toast-x {
+      flex: 0 0 auto;
+      color: var(--ink-tertiary);
+      font-size: var(--text-sm);
+      padding: 0 2px;
+      line-height: 1.4;
+    }
+    .rtm-toast-x:hover { color: var(--ink-primary); }
+
+    /* ===== STEP 11 · DIALOG (confirm/prompt) ===== */
+    #dialog-root .rtm-modal-backdrop { z-index: 500; }
+    .rtm-dialog { max-width: 420px; }
+    .rtm-dialog h2 { font-size: var(--text-lg); margin-bottom: var(--space-2); }
+    .rtm-dialog input[type="text"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font: inherit;
+      outline: none;
+      margin-top: var(--space-2);
+    }
+    .rtm-dialog input[type="text"]:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px var(--sage-soft);
+    }
+
+    /* ===== STEP 11 · ERROR BANNER (Firestore/network fail) ===== */
+    #err-banner-root { position: fixed; top: 0; left: 0; right: 0; z-index: 450; }
+    .rtm-err-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-2);
+      padding: 10px 16px;
+      background: var(--danger-fg);
+      color: #fff;
+      font-size: var(--text-sm);
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(44,42,38,.2);
+    }
+    .rtm-err-banner button {
+      color: #fff;
+      text-decoration: underline;
+      font-weight: 600;
+      padding: 0 4px;
+    }
+    .rtm-icon-btn { line-height: 1; }
+
     /* ===== MOBILE ===== */
     @media (max-width: 767px) {
       .app-shell { grid-template-columns: 1fr; }
@@ -1062,7 +1182,9 @@
 <body>
   <div id="app"></div>
   <div id="modal-root"></div>
-  <div id="toast-root"></div>
+  <div id="toast-root" aria-live="polite" aria-atomic="false"></div>
+  <div id="dialog-root"></div>
+  <div id="err-banner-root"></div>
 
   <script type="module">
     // ==========================================================
@@ -1190,6 +1312,114 @@
       },
     };
 
+    // ===== STEP 11 · TOAST (แทน alert) =====
+    const TOAST_MS = 4000;
+    let toastSeq = 0;
+    const TOAST_ICON = { success: "✅", error: "⚠️", warn: "⚠️", info: "•" };
+    const toast = (msg, kind = "info", ms = TOAST_MS) => {
+      const id = ++toastSeq;
+      store.set("toasts", (store.get("toasts") || []).concat([{ id, msg: String(msg ?? ""), kind }]));
+      if (ms > 0) setTimeout(() => dismissToast(id), ms);
+      return id;
+    };
+    const dismissToast = (id) =>
+      store.set("toasts", (store.get("toasts") || []).filter(t => t.id !== id));
+    // error helper: "prefix · message"
+    const toastErr = (prefix, e) =>
+      toast(prefix + (e && e.message ? " · " + e.message : ""), "error", 6000);
+    const toastOk = (msg) => toast(msg, "success");
+
+    const mountToasts = () => {
+      const root = document.querySelector("#toast-root");
+      if (!root) return;
+      const list = store.get("toasts") || [];
+      root.innerHTML = html`${list.map(t => html`
+        <div class="rtm-toast rtm-toast-${t.kind}" role="${t.kind === "error" ? "alert" : "status"}" data-toast="${t.id}">
+          <span class="rtm-toast-icon" aria-hidden="true">${TOAST_ICON[t.kind] || "•"}</span>
+          <span class="rtm-toast-msg">${t.msg}</span>
+          <button class="rtm-toast-x" data-dismiss="${t.id}" aria-label="ปิดข้อความ" title="ปิด">✕</button>
+        </div>`)}`;
+      root.querySelectorAll("[data-dismiss]").forEach(b =>
+        b.addEventListener("click", () => dismissToast(Number(b.dataset.dismiss))));
+    };
+
+    // ===== STEP 11 · CONFIRM / PROMPT DIALOG (แทน confirm/prompt · promise) =====
+    const confirmModal = (opts) => new Promise((resolve) => {
+      const o = typeof opts === "string" ? { title: opts } : (opts || {});
+      const { title = "ยืนยัน?", body = "", okLabel = "ตกลง", cancelLabel = "ยกเลิก", danger = false } = o;
+      const root = document.querySelector("#dialog-root");
+      if (!root) { resolve(false); return; }
+      root.innerHTML = html`
+        <div class="rtm-modal-backdrop" data-dlg-cancel>
+          <div class="rtm-modal rtm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="dlg-title">
+            <h2 id="dlg-title">${title}</h2>
+            ${body ? html`<p class="rtm-modal-hint" style="white-space:pre-line">${body}</p>` : raw("")}
+            <div class="rtm-modal-actions">
+              <button class="btn-secondary" data-dlg-cancel type="button">${cancelLabel}</button>
+              <button class="${danger ? "btn-danger" : "btn-primary"}" data-dlg-ok type="button">${okLabel}</button>
+            </div>
+          </div>
+        </div>`;
+      const done = (val) => { root.innerHTML = ""; document.removeEventListener("keydown", onKey); resolve(val); };
+      const onKey = (e) => { if (e.key === "Escape") done(false); else if (e.key === "Enter") done(true); };
+      document.addEventListener("keydown", onKey);
+      root.querySelector("[data-dlg-ok]").addEventListener("click", () => done(true));
+      root.querySelectorAll("[data-dlg-cancel]").forEach(el =>
+        el.addEventListener("click", (e) => { if (e.target === el) done(false); }));
+      root.querySelector("[data-dlg-ok]").focus();
+    });
+
+    const promptModal = (opts) => new Promise((resolve) => {
+      const o = typeof opts === "string" ? { title: opts } : (opts || {});
+      const { title = "กรอกข้อมูล", body = "", placeholder = "", value = "",
+              okLabel = "บันทึก", cancelLabel = "ยกเลิก", optional = false } = o;
+      const root = document.querySelector("#dialog-root");
+      if (!root) { resolve(null); return; }
+      root.innerHTML = html`
+        <div class="rtm-modal-backdrop" data-dlg-cancel>
+          <div class="rtm-modal rtm-dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
+            <h2 id="dlg-title">${title}</h2>
+            ${body ? html`<p class="rtm-modal-hint">${body}</p>` : raw("")}
+            <input id="dlg-input" type="text" value="${value}" placeholder="${placeholder}" aria-labelledby="dlg-title">
+            <div class="rtm-modal-actions">
+              <button class="btn-secondary" data-dlg-cancel type="button">${cancelLabel}</button>
+              <button class="btn-primary" data-dlg-ok type="button">${okLabel}</button>
+            </div>
+          </div>
+        </div>`;
+      const input = root.querySelector("#dlg-input");
+      const done = (val) => { root.innerHTML = ""; document.removeEventListener("keydown", onKey); resolve(val); };
+      const submit = () => { const v = input.value.trim(); done(v === "" ? (optional ? "" : null) : v); };
+      const onKey = (e) => { if (e.key === "Escape") done(null); else if (e.key === "Enter") submit(); };
+      document.addEventListener("keydown", onKey);
+      root.querySelector("[data-dlg-ok]").addEventListener("click", submit);
+      root.querySelectorAll("[data-dlg-cancel]").forEach(el =>
+        el.addEventListener("click", (e) => { if (e.target === el) done(null); }));
+      input.focus();
+    });
+
+    // ===== STEP 11 · ERROR BANNER (Firestore/network fail — ไม่ให้ค้างเงียบ) =====
+    const fsErrors = new Set();
+    const mountErrBanner = () => {
+      const root = document.querySelector("#err-banner-root");
+      if (!root) return;
+      if (!fsErrors.size) { root.innerHTML = ""; return; }
+      root.innerHTML = html`
+        <div class="rtm-err-banner" role="alert">
+          <span aria-hidden="true">⚠️</span>
+          <span>การเชื่อมต่อขัดข้อง — ข้อมูลบางส่วนอาจไม่อัพเดต</span>
+          <button type="button" data-err-reload>รีเฟรช</button>
+        </div>`;
+      root.querySelector("[data-err-reload]")?.addEventListener("click", () => location.reload());
+    };
+    // Firestore onSnapshot error handler factory
+    const fsErr = (label) => (e) => {
+      console.error("Firestore[" + label + "]:", e);
+      fsErrors.add(label);
+      mountErrBanner();
+      toast("โหลด " + label + " ไม่สำเร็จ · เช็คการเชื่อมต่อ", "error", 6000);
+    };
+
     // ===== ROUTER =====
     const routes = [];
     let currentCleanup = null;
@@ -1254,7 +1484,7 @@
         await signInWithPopup(auth, new GoogleAuthProvider());
       } catch (e) {
         console.error("sign-in failed:", e);
-        alert("Sign in ล้มเหลว · " + e.message);
+        toastErr("Sign in ล้มเหลว", e);
       }
     };
     const handleSignOut = () => signOut(auth);
@@ -1284,8 +1514,8 @@
         <div class="app-shell">
           <aside class="sidebar">
             <div class="brand">RTM Hub<small>THA</small></div>
-            <nav>
-              ${NAV.map(n => `<a href="${n.href}" class="${currentPath.startsWith(n.href) ? "active" : ""}">${n.icon} ${n.label}</a>`)}
+            <nav aria-label="เมนูหลัก">
+              ${NAV.map(n => { const on = currentPath.startsWith(n.href); return `<a href="${n.href}" class="${on ? "active" : ""}"${on ? ' aria-current="page"' : ""}><span aria-hidden="true">${n.icon}</span> ${n.label}</a>`; })}
             </nav>
             <div class="user">
               <div class="rtm-avatar" style="background:${escape(avatarBg)}">${escape(shortCode)}</div>
@@ -1293,7 +1523,7 @@
                 <div class="user-name">${escape(displayName)}</div>
                 <div class="user-role">${escape(role)}</div>
               </div>
-              <button id="btn-signout-shell" title="ออกจากระบบ">↪</button>
+              <button id="btn-signout-shell" title="ออกจากระบบ" aria-label="ออกจากระบบ">↪</button>
             </div>
           </aside>
           <main class="main" id="route-outlet">
@@ -1321,7 +1551,7 @@
         const list = [];
         snap.forEach(d => list.push({ uid: d.id, ...d.data() }));
         store.set("users", list);
-      });
+      }, fsErr("users"));
     };
 
     const userByUid = (uid) =>
@@ -1334,7 +1564,7 @@
         if (snap.empty) { store.set("activeSession", null); return; }
         const d = snap.docs[0];
         store.set("activeSession", { id: d.id, ...d.data() });
-      });
+      }, fsErr("session"));
     };
 
     const subscribeAllSessions = () => {
@@ -1343,7 +1573,7 @@
         const list = [];
         snap.forEach(d => list.push({ id: d.id, ...d.data() }));
         store.set("sessions", list);
-      });
+      }, fsErr("sessions"));
     };
 
     const startSession = async (name) => {
@@ -1372,7 +1602,7 @@
         const list = [];
         snap.forEach(d => list.push({ id: d.id, ...d.data() }));
         store.set("ideas", list);
-      });
+      }, fsErr("ideas"));
     };
 
     const updateIdeaTitle = async (id, title) => {
@@ -1431,7 +1661,7 @@
         const list = [];
         snap.forEach(d => list.push({ id: d.id, ...d.data() }));
         store.set("projects", list);
-      });
+      }, fsErr("projects"));
     };
 
     const promoteIdeaToProject = async (idea, projectData) => {
@@ -1529,7 +1759,7 @@
         const list = [];
         snap.forEach(d => list.push({ id: d.id, project_id: d.ref.parent.parent.id, ...d.data() }));
         store.set("allMilestones", list);
-      });
+      }, fsErr("milestones"));
     };
 
     const milestonesOf = (projectId) =>
@@ -1584,7 +1814,7 @@
         const list = [];
         snap.forEach(d => list.push({ id: d.id, project_id: d.ref.parent.parent.id, ...d.data() }));
         store.set("allActions", list);
-      });
+      }, fsErr("actions"));
     };
 
     const actionsOf = (projectId, milestoneId = null) =>
@@ -1720,7 +1950,7 @@
         const list = [];
         snap.forEach(d => list.push({ id: d.id, ...d.data() }));
         store.set("lessons", list);
-      }, err => console.error("subscribeLessons:", err));
+      }, fsErr("lessons"));
     };
 
     // haystack for a lesson = title + text + tags (lowercased)
@@ -1867,7 +2097,7 @@
         try { await createIdea(val); }
         catch (err) {
           console.error(err);
-          alert("โยนไอเดียไม่สำเร็จ · " + err.message);
+          toastErr("โยนไอเดียไม่สำเร็จ", err);
           input.value = val;
         }
         input.disabled = false;
@@ -2003,9 +2233,9 @@
         card.querySelector('[data-action="delete"]')?.addEventListener("click", async (e) => {
           e.stopPropagation();
           const title = card.querySelector("[data-title]")?.textContent || "";
-          if (!confirm(`ลบไอเดีย "${title}" ?`)) return;
-          try { await deleteIdea(id); }
-          catch (err) { alert("ลบไม่สำเร็จ · " + err.message); }
+          if (!await confirmModal({ title: `ลบไอเดีย "${title}" ?`, okLabel: "ลบ", danger: true })) return;
+          try { await deleteIdea(id); toastOk("ลบไอเดียแล้ว"); }
+          catch (err) { toastErr("ลบไม่สำเร็จ", err); }
         });
       });
     };
@@ -2026,7 +2256,7 @@
         const val = input.value.trim();
         if (!val || val === current) { input.replaceWith(titleEl); return; }
         try { await updateIdeaTitle(id, val); }
-        catch (err) { alert("แก้ไขไม่สำเร็จ · " + err.message); input.replaceWith(titleEl); }
+        catch (err) { toastErr("แก้ไขไม่สำเร็จ", err); input.replaceWith(titleEl); }
       };
       input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") { e.preventDefault(); commit(); }
@@ -2431,10 +2661,10 @@
       document.querySelector("#btn-edit-project")?.addEventListener("click", () => store.set("modal", { name: "edit-project", projectId: p.id }));
       document.querySelector("#btn-edit-closed")?.addEventListener("click", () => store.set("modal", { name: "edit-closed", projectId: p.id }));
       document.querySelector("#btn-reopen-project")?.addEventListener("click", async () => {
-        if (!confirm(`เปิด "${p.title}" กลับมาแก้?\n\nresult + impact + verdict + lesson ที่บันทึกตอนปิดจะถูกล้าง\nproject กลับไปอยู่ Live (active) · ปิดใหม่ได้`)) return;
+        if (!await confirmModal({ title: `เปิด "${p.title}" กลับมาแก้?`, body: "result + impact + verdict + lesson ที่บันทึกตอนปิดจะถูกล้าง\nproject กลับไปอยู่ Live (active) · ปิดใหม่ได้", okLabel: "เปิดใหม่", danger: true })) return;
         const btn = document.querySelector("#btn-reopen-project");
         if (btn) btn.disabled = true;
-        try { await reopenProject(p); } catch (e) { alert("เปิดใหม่ไม่สำเร็จ · " + e.message); if (btn) btn.disabled = false; }
+        try { await reopenProject(p); toastOk("เปิด project กลับมาแก้แล้ว"); } catch (e) { toastErr("เปิดใหม่ไม่สำเร็จ", e); if (btn) btn.disabled = false; }
       });
       document.querySelector("#btn-add-milestone")?.addEventListener("click", () => { uiProject.addingMilestone = true; renderProject(pid); });
 
@@ -2564,7 +2794,7 @@
         const next = a.status === "todo" ? "doing" : a.status === "doing" ? "done" : "todo";
         b.disabled = true;
         try { await setActionStatus(p.id, id, mil, next); }
-        catch (err) { alert("อัพเดตไม่สำเร็จ · " + err.message); b.disabled = false; }
+        catch (err) { toastErr("อัพเดตไม่สำเร็จ", err); b.disabled = false; }
       }));
 
       document.querySelectorAll("[data-block]").forEach(b => b.addEventListener("click", async (e) => {
@@ -2572,18 +2802,18 @@
         const id = b.dataset.block;
         const a = actionsOf(p.id).find(x => x.id === id);
         let note = a.blocker_note;
-        if (!a.blocker_flag) { note = prompt("Blocker คืออะไร? (optional)", "") || null; }
+        if (!a.blocker_flag) { note = await promptModal({ title: "Blocker คืออะไร?", body: "ไม่บังคับ · ปล่อยว่างได้", placeholder: "อธิบายสั้นๆ", optional: true }) || null; }
         try { await toggleActionBlocker(p.id, id, !a.blocker_flag, note); }
-        catch (err) { alert("Error · " + err.message); }
+        catch (err) { toastErr("อัพเดต blocker ไม่สำเร็จ", err); }
       }));
 
       document.querySelectorAll("[data-del-action]").forEach(b => b.addEventListener("click", async (e) => {
         e.stopPropagation();
         const id = b.dataset.delAction, mil = b.dataset.mil;
         const a = actionsOf(p.id).find(x => x.id === id);
-        if (!confirm(`ลบ action "${a?.title || ""}" ?`)) return;
-        try { await deleteAction(p.id, id, mil); }
-        catch (err) { alert("ลบไม่สำเร็จ · " + err.message); }
+        if (!await confirmModal({ title: `ลบ action "${a?.title || ""}" ?`, okLabel: "ลบ", danger: true })) return;
+        try { await deleteAction(p.id, id, mil); toastOk("ลบ action แล้ว"); }
+        catch (err) { toastErr("ลบไม่สำเร็จ", err); }
       }));
 
       document.querySelectorAll("[data-add-action]").forEach(b => b.addEventListener("click", (e) => {
@@ -2605,10 +2835,10 @@
         const id = b.dataset.delMil;
         const mm = milestonesOf(p.id).find(x => x.id === id);
         const n = actionsOf(p.id, id).length;
-        if (n > 0) { alert(`milestone "${mm?.title || ""}" มี ${n} action — ลบ/ย้าย action ออกก่อน`); return; }
-        if (!confirm(`ลบ milestone "${mm?.title || ""}" ?`)) return;
-        try { await deleteMilestone(p.id, id); }
-        catch (err) { alert("ลบไม่สำเร็จ · " + err.message); }
+        if (n > 0) { toast(`milestone "${mm?.title || ""}" มี ${n} action — ลบ/ย้าย action ออกก่อน`, "warn"); return; }
+        if (!await confirmModal({ title: `ลบ milestone "${mm?.title || ""}" ?`, okLabel: "ลบ", danger: true })) return;
+        try { await deleteMilestone(p.id, id); toastOk("ลบ milestone แล้ว"); }
+        catch (err) { toastErr("ลบไม่สำเร็จ", err); }
       }));
       const meSave = document.querySelector("#me-save");
       if (meSave) {
@@ -2618,7 +2848,7 @@
           if (!title) return;
           meSave.disabled = true;
           try { await updateMilestone(p.id, meSave.dataset.mil, { title, target_date: due || null }); uiProject.editingMilestone = null; renderProject(p.id); }
-          catch (err) { alert("บันทึกไม่สำเร็จ · " + err.message); meSave.disabled = false; }
+          catch (err) { toastErr("บันทึกไม่สำเร็จ", err); meSave.disabled = false; }
         };
         meSave.addEventListener("click", doSave);
         document.querySelector("#me-cancel")?.addEventListener("click", () => { uiProject.editingMilestone = null; renderProject(p.id); });
@@ -2641,7 +2871,7 @@
           if (!title || !owner) { document.querySelector("#ae-err").classList.add("show"); return; }
           aeSave.disabled = true;
           try { await updateAction(p.id, aeSave.dataset.act, { title, owner_uid: owner, due_date: due || null }); uiProject.editingAction = null; renderProject(p.id); }
-          catch (err) { alert("บันทึกไม่สำเร็จ · " + err.message); aeSave.disabled = false; }
+          catch (err) { toastErr("บันทึกไม่สำเร็จ", err); aeSave.disabled = false; }
         };
         aeSave.addEventListener("click", doSave);
         document.querySelector("#ae-cancel")?.addEventListener("click", () => { uiProject.editingAction = null; renderProject(p.id); });
@@ -2675,7 +2905,7 @@
           // keep form open for rapid entry
           renderProject(p.id);
           document.querySelector("#aa-title")?.focus();
-        } catch (err) { alert("เพิ่ม action ไม่สำเร็จ · " + err.message); save.disabled = false; }
+        } catch (err) { toastErr("เพิ่ม action ไม่สำเร็จ", err); save.disabled = false; }
       };
       save.addEventListener("click", doAdd);
       titleEl?.addEventListener("keydown", (e) => { if (e.key === "Enter") doAdd(); if (e.key === "Escape") { uiProject.addingAction = null; renderProject(p.id); } });
@@ -2701,7 +2931,7 @@
         const btn = document.querySelector("#am-save");
         btn.disabled = true;
         try { await addMilestone(pid, { title, target_date: due || null }); uiProject.addingMilestone = false; renderProject(pid); }
-        catch (err) { alert("เพิ่ม milestone ไม่สำเร็จ · " + err.message); btn.disabled = false; }
+        catch (err) { toastErr("เพิ่ม milestone ไม่สำเร็จ", err); btn.disabled = false; }
       };
       document.querySelector("#am-save")?.addEventListener("click", doAdd);
       document.querySelector("#am-cancel")?.addEventListener("click", () => { uiProject.addingMilestone = false; renderProject(pid); });
@@ -2808,7 +3038,7 @@
           if (!label || (url && !/^https?:\/\//i.test(url))) { err.classList.add("show"); return; }
           save.disabled = true;
           try { await addResource(p.id, { label, url }); uiProject.addingResource = false; renderProject(p.id); }
-          catch (e) { alert("เพิ่มลิงก์ไม่สำเร็จ · " + e.message); save.disabled = false; }
+          catch (e) { toastErr("เพิ่มลิงก์ไม่สำเร็จ", e); save.disabled = false; }
         };
         save.addEventListener("click", doAdd);
         const keyer = (e) => { if (e.key === "Enter") doAdd(); if (e.key === "Escape") { uiProject.addingResource = false; renderProject(p.id); } };
@@ -2818,9 +3048,9 @@
       document.querySelectorAll("[data-del-res]").forEach(b => b.addEventListener("click", async () => {
         const idx = parseInt(b.dataset.delRes, 10);
         const r = projectResources(p)[idx];
-        if (!confirm(`ลบลิงก์ "${r?.label || ""}" ?`)) return;
-        try { await removeResource(p.id, idx); }
-        catch (e) { alert("ลบไม่สำเร็จ · " + e.message); }
+        if (!await confirmModal({ title: `ลบลิงก์ "${r?.label || ""}" ?`, okLabel: "ลบ", danger: true })) return;
+        try { await removeResource(p.id, idx); toastOk("ลบลิงก์แล้ว"); }
+        catch (e) { toastErr("ลบไม่สำเร็จ", e); }
       }));
       // Resource edit (Step 10.1)
       document.querySelectorAll("[data-edit-res]").forEach(b => b.addEventListener("click", () => {
@@ -2835,7 +3065,7 @@
           if (!label || (url && !/^https?:\/\//i.test(url))) { err.classList.add("show"); return; }
           reSave.disabled = true;
           try { await updateResource(p.id, parseInt(reSave.dataset.idx, 10), { label, url }); uiProject.editingResource = null; renderProject(p.id); }
-          catch (e) { alert("บันทึกไม่สำเร็จ · " + e.message); reSave.disabled = false; }
+          catch (e) { toastErr("บันทึกไม่สำเร็จ", e); reSave.disabled = false; }
         };
         reSave.addEventListener("click", doSave);
         document.querySelector("#re-cancel")?.addEventListener("click", () => { uiProject.editingResource = null; renderProject(p.id); });
@@ -2851,7 +3081,7 @@
 
     const subscribeMyCheckin = (uid, week) =>
       onSnapshot(doc(db, "users", uid, "checkins", week), snap =>
-        store.set("myCheckin", snap.exists() ? { id: snap.id, ...snap.data() } : null));
+        store.set("myCheckin", snap.exists() ? { id: snap.id, ...snap.data() } : null), fsErr("check-in"));
 
     // collectionGroup: ทุก check-in ของทุกคน (Team Board อ่าน status รายสัปดาห์) — filter week ฝั่ง client
     // (ไม่ใส่ where → ไม่ต้อง setup collectionGroup index เพิ่ม · scale 4 users เล็กมาก)
@@ -2860,7 +3090,7 @@
         const list = [];
         snap.forEach(d => list.push({ id: d.id, uid: d.ref.parent.parent.id, ...d.data() }));
         store.set("allCheckins", list);
-      });
+      }, fsErr("check-ins"));
     const checkinFor = (uid, week) =>
       (store.get("allCheckins") || []).find(c => c.uid === uid && c.week_of === week) || null;
 
@@ -3005,7 +3235,7 @@
         const next = a.status === "todo" ? "doing" : a.status === "doing" ? "done" : "todo";
         b.disabled = true;
         try { await setActionStatus(pid, id, mil, next); }
-        catch (err) { alert("อัพเดตไม่สำเร็จ · " + err.message); b.disabled = false; }
+        catch (err) { toastErr("อัพเดตไม่สำเร็จ", err); b.disabled = false; }
       }));
     };
 
@@ -3157,7 +3387,7 @@
           await submitCheckin(uid, week, form);
           uiMy.editing = false;               // myCheckin snapshot → re-render to summary
         } catch (err) {
-          alert("ส่ง check-in ไม่สำเร็จ · " + err.message);
+          toastErr("ส่ง check-in ไม่สำเร็จ", err);
           btn.disabled = false; btn.textContent = ck ? "อัพเดต Check-in" : "ส่ง Check-in";
         }
       });
@@ -4105,7 +4335,7 @@
         const btn = document.querySelector("#btn-modal-start");
         btn.disabled = true;
         try { await startSession(name); closeModal(); }
-        catch (e) { alert("Error: " + e.message); btn.disabled = false; }
+        catch (e) { toastErr("ผิดพลาด", e); btn.disabled = false; }
       });
 
       document.querySelector("#btn-modal-end")?.addEventListener("click", async () => {
@@ -4114,7 +4344,7 @@
         const btn = document.querySelector("#btn-modal-end");
         btn.disabled = true;
         try { await endSession(active.id); closeModal(); }
-        catch (e) { alert("Error: " + e.message); btn.disabled = false; }
+        catch (e) { toastErr("ผิดพลาด", e); btn.disabled = false; }
       });
 
       document.querySelector("#btn-modal-savetag")?.addEventListener("click", async () => {
@@ -4124,7 +4354,7 @@
         const btn = document.querySelector("#btn-modal-savetag");
         btn.disabled = true;
         try { await updateIdeaSessionTag(m.ideaId, tag); closeModal(); }
-        catch (e) { alert("Error: " + e.message); btn.disabled = false; }
+        catch (e) { toastErr("ผิดพลาด", e); btn.disabled = false; }
       });
 
       // ===== TRIAGE WIRE =====
@@ -4186,7 +4416,7 @@
 
           btn.disabled = true;
           try { await updateIdeaStatus(m.ideaId, action, extra); closeModal(); }
-          catch (e) { alert("Error: " + e.message); btn.disabled = false; }
+          catch (e) { toastErr("ผิดพลาด", e); btn.disabled = false; }
         });
       });
 
@@ -4220,9 +4450,9 @@
             owner_lead_uid: owner,
           });
           closeModal();
-          alert("✓ สร้าง project แล้ว · ไปที่ Live → ดู project");
+          toastOk("สร้าง project แล้ว · ไปที่ Live → ดู project");
         } catch (e) {
-          alert("Error: " + e.message);
+          toastErr("ผิดพลาด", e);
           btn.disabled = false;
         }
       });
@@ -4260,7 +4490,7 @@
           closeModal();
           // North Star: แทน alert เด้ง Live ด้วยหน้าทวน — เปิด project detail ที่โชว์ verdict badge + result
           go("/live/" + p.id);
-        } catch (e) { alert("ปิดไม่สำเร็จ · " + e.message); btn.disabled = false; }
+        } catch (e) { toastErr("ปิดไม่สำเร็จ", e); btn.disabled = false; }
       });
 
       // ===== EDIT CLOSED REPORT WIRE (แก้เฉพาะจุด · คง closed) =====
@@ -4293,7 +4523,7 @@
             lesson_tags: tags,
           });
           closeModal();
-        } catch (e) { alert("บันทึกไม่สำเร็จ · " + e.message); btn.disabled = false; }
+        } catch (e) { toastErr("บันทึกไม่สำเร็จ", e); btn.disabled = false; }
       });
 
       // ===== EDIT PROJECT WIRE =====
@@ -4317,7 +4547,7 @@
             owner_lead_uid: owner,
           });
           closeModal();
-        } catch (e) { alert("บันทึกไม่สำเร็จ · " + e.message); btn.disabled = false; }
+        } catch (e) { toastErr("บันทึกไม่สำเร็จ", e); btn.disabled = false; }
       });
     };
 
@@ -4342,7 +4572,9 @@
         subscribeAllCheckins();
         subscribeLessons();
         store.subscribe("modal", mountModal);
+        store.subscribe("toasts", mountToasts);
         mountModal();
+        mountToasts();
       }
 
       if (!bootedShell) {
@@ -4379,6 +4611,8 @@
 
     // Debug
     window.__RTM = { store, go, state, auth, db,
+      toast, dismissToast, toastErr, toastOk, mountToasts,
+      confirmModal, promptModal, fsErr, fsErrors, mountErrBanner,
       viewTeam, teamMembers, activeActionsOf, checkinFor, isoWeekStr, uiTeam,
       renderTeamMatrix, renderTeamAlerts, renderTeamHighlights, renderTeamCheckin,
       renderPromoteModal,
