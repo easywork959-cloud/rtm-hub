@@ -610,6 +610,140 @@
       border-radius: var(--radius-md);
     }
 
+    /* ===== LIVE VIEW ===== */
+    .rtm-wip-banner {
+      background: var(--danger-bg);
+      color: var(--danger-fg);
+      border: 1px solid var(--danger-fg);
+      border-radius: var(--radius-md);
+      padding: var(--space-3) var(--space-4);
+      margin-top: var(--space-4);
+      font-size: var(--text-sm);
+      font-weight: 500;
+    }
+    .rtm-live-controls { margin-top: var(--space-4); }
+    .rtm-live-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: var(--space-4);
+    }
+    .rtm-project-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-left-width: 4px;
+      border-radius: var(--radius-md);
+      padding: var(--space-4) var(--space-5);
+      cursor: pointer;
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(44,42,38,.04));
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .rtm-project-card:hover { box-shadow: 0 2px 8px rgba(44,42,38,.08); transform: translateY(-1px); }
+    .rtm-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); }
+    .rtm-card-title { font-weight: 600; font-size: var(--text-lg); line-height: 1.3; }
+    .rtm-card-badges { display: flex; gap: var(--space-1); flex-wrap: wrap; margin-top: var(--space-2); }
+    .rtm-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 8px; border-radius: 999px;
+      font-size: var(--text-xs); font-weight: 500;
+    }
+    .rtm-badge-blocker { background: var(--danger-bg); color: var(--danger-fg); }
+    .rtm-badge-stalled { background: var(--peach-soft); color: var(--warn-fg); }
+    .rtm-card-kpi { margin-top: var(--space-2); font-size: var(--text-sm); }
+    .rtm-card-meta {
+      margin-top: var(--space-2); font-size: var(--text-xs);
+      color: var(--ink-secondary); display: flex; gap: 6px; flex-wrap: wrap;
+    }
+    .rtm-mil-bar { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-3); }
+    .rtm-mil-chip {
+      font-size: var(--text-xs); color: var(--ink-secondary);
+      background: var(--bg-subtle); padding: 3px 8px; border-radius: var(--radius-sm);
+    }
+    .rtm-card-next { margin-top: var(--space-3); font-size: var(--text-sm); color: var(--ink-secondary); }
+    .rtm-card-foot {
+      margin-top: var(--space-3); padding-top: var(--space-2);
+      border-top: 1px solid var(--border);
+      font-size: var(--text-xs); color: var(--ink-tertiary);
+    }
+
+    /* ===== PROJECT DETAIL ===== */
+    .rtm-proj-breadcrumb { font-size: var(--text-sm); color: var(--ink-secondary); margin-bottom: var(--space-3); }
+    .rtm-proj-breadcrumb a { color: var(--good-fg); }
+    .rtm-proj-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+    .rtm-proj-framework, .rtm-proj-impact, .rtm-proj-result {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: var(--space-4) var(--space-5);
+      margin-top: var(--space-4); font-size: var(--text-sm);
+    }
+    .rtm-proj-framework > div, .rtm-proj-impact > div { margin: 6px 0; }
+    .rtm-proj-impact { display: flex; gap: var(--space-8); flex-wrap: wrap; }
+    .rtm-fw-key {
+      display: inline-block; min-width: 72px;
+      font-size: var(--text-xs); font-weight: 600; color: var(--ink-tertiary);
+      letter-spacing: 0.03em;
+    }
+    .rtm-proj-result { background: var(--sage-soft); border-color: var(--sage); }
+    .rtm-tag-chip {
+      display: inline-block; font-size: var(--text-xs);
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      padding: 2px 8px; border-radius: 999px; margin-right: 4px;
+    }
+    .rtm-proj-mils-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin: var(--space-6) 0 var(--space-3);
+    }
+    .rtm-mil-block {
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      margin-bottom: var(--space-3); overflow: hidden; background: var(--bg-elevated);
+    }
+    .rtm-mil-header {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-3) var(--space-4); cursor: pointer;
+      background: var(--bg-subtle);
+    }
+    .rtm-mil-header:hover { background: var(--bg-primary); }
+    .rtm-mil-caret { color: var(--ink-tertiary); width: 14px; }
+    .rtm-mil-name { font-weight: 600; }
+    .rtm-mil-sub { margin-left: auto; font-size: var(--text-xs); color: var(--ink-tertiary); }
+    .rtm-action-list { padding: var(--space-2) var(--space-3) var(--space-3); }
+    .rtm-action-row {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-2) var(--space-2);
+      border-bottom: 1px solid var(--border);
+    }
+    .rtm-action-row:last-child { border-bottom: none; }
+    .rtm-action-row.done .rtm-action-title { color: var(--ink-tertiary); text-decoration: line-through; }
+    .rtm-action-check {
+      font-size: var(--text-lg); line-height: 1; color: var(--sage);
+      padding: 2px 4px; border-radius: var(--radius-sm);
+    }
+    .rtm-action-check:hover { background: var(--sage-soft); }
+    .rtm-action-check:disabled { color: var(--ink-tertiary); cursor: default; }
+    .rtm-action-title { flex: 1; font-size: var(--text-sm); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .rtm-action-due { font-size: var(--text-xs); min-width: 52px; text-align: right; }
+    .rtm-add-action-btn {
+      margin-top: var(--space-2); font-size: var(--text-sm);
+      color: var(--good-fg); padding: 4px 8px; border-radius: var(--radius-sm);
+    }
+    .rtm-add-action-btn:hover { background: var(--sage-soft); }
+    .rtm-add-action-form {
+      display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center;
+      padding: var(--space-3); margin-top: var(--space-2);
+      background: var(--bg-subtle); border-radius: var(--radius-sm);
+    }
+    .rtm-add-action-form input[type="text"] { flex: 1; min-width: 140px; }
+    .rtm-add-action-form input, .rtm-add-action-form select {
+      padding: 8px 10px; border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); font: inherit; background: var(--bg-elevated); outline: none;
+    }
+    .rtm-add-action-form input:focus, .rtm-add-action-form select:focus {
+      border-color: var(--sage); box-shadow: 0 0 0 3px var(--sage-soft);
+    }
+
+    @media (max-width: 767px) {
+      .rtm-live-grid { grid-template-columns: 1fr; }
+      .rtm-proj-impact { gap: var(--space-4); }
+    }
+
     /* ===== MODAL ===== */
     .rtm-modal-backdrop {
       position: fixed;
@@ -699,7 +833,7 @@
       getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
-      getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs,
+      getFirestore, collection, collectionGroup, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs,
       onSnapshot, query, where, orderBy, limit, serverTimestamp, increment
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -750,14 +884,28 @@
       return `${Math.floor(diff/86400)} วันที่แล้ว`;
     };
 
+    const TH_MONTHS = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+    const toDate = ts => !ts ? null : (ts.toDate ? ts.toDate() : new Date(ts));
+    const fmtDate = ts => { const d = toDate(ts); return d ? `${d.getDate()} ${TH_MONTHS[d.getMonth()]}` : "—"; };
+    const dateInputVal = ts => { const d = toDate(ts); if (!d) return ""; const p = n => String(n).padStart(2,"0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; };
+    const daysUntil = ts => { const d = toDate(ts); return d == null ? null : Math.ceil((d.getTime() - Date.now()) / 86400000); };
+    const daysSince = ts => { const d = toDate(ts); return d == null ? null : Math.floor((Date.now() - d.getTime()) / 86400000); };
+    const DELIVERABLE_LABELS = {
+      dashboard: "📊 Dashboard", powerbi: "📊 Power BI", sop: "📋 SOP",
+      excel: "📈 Excel", report: "📄 Report", training: "🎓 Training",
+    };
+    const STALLED_DAYS = 14;
+
     // ===== STORE =====
     const state = {
       auth: { user: null, profile: null, ready: false, blocked: false },
       route: { path: "/ideas", params: {} },
       ideas: [], projects: [], users: [], sessions: [], activeSession: null,
       currentProject: null, myActions: [], lessons: [],
+      allMilestones: [], allActions: [],
       modal: null, toasts: [],
       ideasFilter: "all",
+      liveFilter: "all", liveSort: "due",
     };
     const subs = new Map();
     const store = {
@@ -1071,6 +1219,159 @@
       return projectRef.id;
     };
 
+    const updateProject = async (projectId, patch) => {
+      await updateDoc(doc(db, "projects", projectId), patch);
+    };
+
+    // ===== DATA · milestones =====
+    // collectionGroup: 1 listener covers every project's milestones (v1 = 1 tenant)
+    const subscribeAllMilestones = () => {
+      return onSnapshot(collectionGroup(db, "milestones"), snap => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, project_id: d.ref.parent.parent.id, ...d.data() }));
+        store.set("allMilestones", list);
+      });
+    };
+
+    const milestonesOf = (projectId) =>
+      (store.get("allMilestones") || [])
+        .filter(m => m.project_id === projectId)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+    const addMilestone = async (projectId, { title, target_date }) => {
+      const existing = milestonesOf(projectId);
+      const order = existing.length ? Math.max(...existing.map(m => m.order || 0)) + 1 : 0;
+      await addDoc(collection(db, "projects", projectId, "milestones"), {
+        title: title.trim(),
+        target_date: target_date ? new Date(target_date) : null,
+        order,
+        status: "not_yet",
+        closed_at: null,
+        template_source: null,
+      });
+    };
+
+    // Auto-close: milestone = done when it has ≥1 action and all are done.
+    // Reopen if a done milestone gains a not-done action. Read actions fresh to dodge snapshot lag.
+    const syncMilestone = async (projectId, milestoneId) => {
+      if (!milestoneId) return;
+      const snap = await getDocs(collection(db, "projects", projectId, "actions"));
+      const acts = [];
+      snap.forEach(d => { const a = d.data(); if (a.milestone_id === milestoneId) acts.push(a); });
+      const allDone = acts.length > 0 && acts.every(a => a.status === "done");
+      const cur = (store.get("allMilestones") || []).find(m => m.id === milestoneId && m.project_id === projectId)?.status;
+      if (allDone && cur !== "done") {
+        await updateDoc(doc(db, "projects", projectId, "milestones", milestoneId), { status: "done", closed_at: serverTimestamp() });
+      } else if (!allDone && cur === "done") {
+        await updateDoc(doc(db, "projects", projectId, "milestones", milestoneId), { status: "not_yet", closed_at: null });
+      }
+    };
+
+    // ===== DATA · actions =====
+    const subscribeAllActions = () => {
+      return onSnapshot(collectionGroup(db, "actions"), snap => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, project_id: d.ref.parent.parent.id, ...d.data() }));
+        store.set("allActions", list);
+      });
+    };
+
+    const actionsOf = (projectId, milestoneId = null) =>
+      (store.get("allActions") || []).filter(a =>
+        a.project_id === projectId && (milestoneId == null || a.milestone_id === milestoneId));
+
+    const addAction = async (projectId, { milestone_id, title, owner_uid, due_date, output_text }) => {
+      await addDoc(collection(db, "projects", projectId, "actions"), {
+        milestone_id,
+        title: title.trim(),
+        owner_uid,
+        due_date: due_date ? new Date(due_date) : null,
+        output_text: (output_text || "").trim(),
+        status: "todo",
+        blocker_flag: false,
+        blocker_note: null,
+        created_at: serverTimestamp(),
+        status_changed_at: serverTimestamp(),
+        done_at: null,
+      });
+      await syncMilestone(projectId, milestone_id);
+    };
+
+    const setActionStatus = async (projectId, actionId, milestoneId, status) => {
+      const patch = { status, status_changed_at: serverTimestamp() };
+      patch.done_at = status === "done" ? serverTimestamp() : null;
+      await updateDoc(doc(db, "projects", projectId, "actions", actionId), patch);
+      await syncMilestone(projectId, milestoneId);
+    };
+
+    const toggleActionBlocker = async (projectId, actionId, flag, note = null) => {
+      await updateDoc(doc(db, "projects", projectId, "actions", actionId), {
+        blocker_flag: flag,
+        blocker_note: flag ? (note || null) : null,
+      });
+    };
+
+    const deleteAction = async (projectId, actionId, milestoneId) => {
+      await deleteDoc(doc(db, "projects", projectId, "actions", actionId));
+      await syncMilestone(projectId, milestoneId);
+    };
+
+    // ===== DATA · lessons =====
+    const writeLesson = async (project) => {
+      if (!project.lesson_learned) return; // no lesson text → nothing to surface later
+      await addDoc(collection(db, "lessons"), {
+        project_id: project.id,
+        project_title: project.title,
+        lesson_text: project.lesson_learned,
+        tags: project.lesson_tags || [],
+        deliverable_type: project.deliverable_type,
+        closed_at: serverTimestamp(),
+        tenant_id: TENANT_ID,
+        dc_id: DC_ID,
+      });
+    };
+
+    const closeProject = async (project, closing) => {
+      await updateDoc(doc(db, "projects", project.id), {
+        status: "closed",
+        result_text: closing.result_text,
+        impact_actual_value: closing.impact_actual_value,
+        impact_actual_unit: closing.impact_actual_unit,
+        impact_verified_by_uid: closing.impact_verified_by_uid || null,
+        impact_verified_at: closing.impact_verified_by_uid ? serverTimestamp() : null,
+        lesson_learned: closing.lesson_learned || null,
+        lesson_tags: closing.lesson_tags || [],
+        closed_at: serverTimestamp(),
+      });
+      await writeLesson({ ...project, ...closing });
+    };
+
+    // ===== DERIVED · project summary =====
+    const milestoneDisplayStatus = (acts) => {
+      if (acts.length === 0) return "empty";
+      const done = acts.filter(a => a.status === "done").length;
+      if (done === acts.length) return "done";
+      if (acts.some(a => a.status === "doing" || a.status === "done")) return "progress";
+      return "todo";
+    };
+    const MILESTONE_ICON = { done: "✅", progress: "🟡", todo: "⬜", empty: "⬜", blocker: "🚩" };
+
+    const isStalled = (a) => a.status === "doing" && (daysSince(a.status_changed_at) || 0) > STALLED_DAYS;
+
+    const projectSummary = (projectId) => {
+      const acts = actionsOf(projectId);
+      const mils = milestonesOf(projectId);
+      const total = acts.length;
+      const done = acts.filter(a => a.status === "done").length;
+      const hasBlocker = acts.some(a => a.blocker_flag);
+      const stalled = acts.some(isStalled);
+      const stalledDays = Math.max(0, ...acts.filter(isStalled).map(a => daysSince(a.status_changed_at) || 0));
+      const nextAction = acts
+        .filter(a => a.status !== "done")
+        .sort((a, b) => (toDate(a.due_date)?.getTime() ?? Infinity) - (toDate(b.due_date)?.getTime() ?? Infinity))[0] || null;
+      return { acts, mils, total, done, hasBlocker, stalled, stalledDays, nextAction };
+    };
+
     // ===== VIEW · ideas =====
     const viewIdeas = () => {
       const outlet = document.querySelector("#route-outlet");
@@ -1373,6 +1674,405 @@
       `;
     };
 
+    // ===== VIEW · live =====
+    const viewLive = () => {
+      const outlet = document.querySelector("#route-outlet");
+      outlet.innerHTML = html`
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap">
+          <h1>🚀 Live Projects</h1>
+          <a href="#/decide" class="rtm-pill" style="background:var(--sage-soft);color:var(--good-fg);border-color:var(--sage)">+ New from Decision →</a>
+        </div>
+        <div id="live-wip"></div>
+        <div class="rtm-live-controls" id="live-controls"></div>
+        <div id="live-list" style="margin-top:var(--space-4)"></div>
+      `;
+      const renderAll = () => { renderLiveControls(); renderLiveList(); renderWipBanner(); };
+      renderAll();
+      const unsubs = [
+        store.subscribe("projects", renderAll),
+        store.subscribe("allActions", renderAll),
+        store.subscribe("allMilestones", renderAll),
+        store.subscribe("users", renderAll),
+        store.subscribe("liveFilter", renderAll),
+        store.subscribe("liveSort", renderAll),
+      ];
+      return () => unsubs.forEach(u => u());
+    };
+
+    const activeProjects = () => (store.get("projects") || []).filter(p => p.status === "active");
+
+    const renderWipBanner = () => {
+      const el = document.querySelector("#live-wip");
+      if (!el) return;
+      const n = activeProjects().length;
+      el.innerHTML = n > 5 ? html`
+        <div class="rtm-wip-banner">⚠ WIP ${n} projects (limit 5) — โฟกัสไม่พอ · ปิดของเก่าก่อนเปิดใหม่</div>
+      ` : "";
+    };
+
+    const renderLiveControls = () => {
+      const el = document.querySelector("#live-controls");
+      if (!el) return;
+      const f = store.get("liveFilter") || "all";
+      const s = store.get("liveSort") || "due";
+      const uid = store.get("auth").user?.uid;
+      const all = activeProjects();
+      const mineCount = all.filter(p => p.owner_lead_uid === uid || actionsOf(p.id).some(a => a.owner_uid === uid)).length;
+      const blockerCount = all.filter(p => projectSummary(p.id).hasBlocker).length;
+      el.innerHTML = html`
+        <div class="rtm-filter-row" style="margin-bottom:0">
+          <button class="rtm-pill ${f==='all'?'active':''}" data-lfilter="all">All · ${all.length}</button>
+          <button class="rtm-pill ${f==='mine'?'active':''}" data-lfilter="mine">ของฉัน · ${mineCount}</button>
+          <button class="rtm-pill ${f==='blocker'?'active':''}" data-lfilter="blocker">🚩 Blocker · ${blockerCount}</button>
+          <span style="margin-left:auto;display:flex;gap:var(--space-2);align-items:center">
+            <span style="font-size:var(--text-sm);color:var(--ink-tertiary)">Sort:</span>
+            <button class="rtm-pill ${s==='due'?'active':''}" data-lsort="due">Due soon</button>
+            <button class="rtm-pill ${s==='recent'?'active':''}" data-lsort="recent">ล่าสุด</button>
+          </span>
+        </div>
+      `;
+      el.querySelectorAll("[data-lfilter]").forEach(b => b.addEventListener("click", () => store.set("liveFilter", b.dataset.lfilter)));
+      el.querySelectorAll("[data-lsort]").forEach(b => b.addEventListener("click", () => store.set("liveSort", b.dataset.lsort)));
+    };
+
+    const renderLiveList = () => {
+      const el = document.querySelector("#live-list");
+      if (!el) return;
+      const uid = store.get("auth").user?.uid;
+      const f = store.get("liveFilter") || "all";
+      const s = store.get("liveSort") || "due";
+      let list = activeProjects();
+      if (f === "mine") list = list.filter(p => p.owner_lead_uid === uid || actionsOf(p.id).some(a => a.owner_uid === uid));
+      if (f === "blocker") list = list.filter(p => projectSummary(p.id).hasBlocker);
+
+      list = list.map(p => ({ p, sum: projectSummary(p.id) }));
+      if (s === "due") {
+        list.sort((a, b) =>
+          (toDate(a.sum.nextAction?.due_date)?.getTime() ?? Infinity) -
+          (toDate(b.sum.nextAction?.due_date)?.getTime() ?? Infinity));
+      } else {
+        list.sort((a, b) => (toDate(b.p.created_at)?.getTime() ?? 0) - (toDate(a.p.created_at)?.getTime() ?? 0));
+      }
+
+      if (list.length === 0) {
+        el.innerHTML = html`<div class="rtm-empty">${f === "all"
+          ? "ยังไม่มี project กำลังทำ · ไปที่ Decision Board เลือก 'Do Now'"
+          : "ไม่มี project ในตัวกรองนี้"}</div>`;
+        return;
+      }
+      el.innerHTML = html`<div class="rtm-live-grid">${list.map(({ p, sum }) => renderProjectCard(p, sum))}</div>`;
+      el.querySelectorAll("[data-open-project]").forEach(card =>
+        card.addEventListener("click", () => go("/live/" + card.dataset.openProject)));
+    };
+
+    const renderProjectCard = (p, sum) => {
+      const lead = userByUid(p.owner_lead_uid);
+      const border = sum.hasBlocker ? "var(--terracotta)" : sum.stalled ? "var(--peach)" : "var(--sage)";
+      const milBar = sum.mils.map(m => {
+        const acts = actionsOf(p.id, m.id);
+        const st = acts.some(a => a.blocker_flag) ? "blocker" : milestoneDisplayStatus(acts);
+        return `<span class="rtm-mil-chip" title="${escape(m.title)}">${MILESTONE_ICON[st]} ${escape(m.title)}</span>`;
+      }).join("");
+      const na = sum.nextAction;
+      let nextLine = "";
+      if (na) {
+        const d = daysUntil(na.due_date);
+        const owner = userByUid(na.owner_uid);
+        const dueTxt = na.due_date ? (d < 0 ? `เลย ${Math.abs(d)} วัน` : d === 0 ? "วันนี้" : `${d} วัน`) : "ไม่ตั้ง due";
+        const overdue = na.due_date && d < 0;
+        nextLine = `<div class="rtm-card-next">Next: <b>${escape(na.title)}</b> · ${escape(owner?.short_code || "?")} · ${fmtDate(na.due_date)} <span style="color:${overdue ? "var(--danger-fg)" : "var(--ink-tertiary)"}">(${escape(dueTxt)})</span></div>`;
+      }
+      const badges = [];
+      if (sum.hasBlocker) badges.push(`<span class="rtm-badge rtm-badge-blocker">🚩 blocker</span>`);
+      if (sum.stalled) badges.push(`<span class="rtm-badge rtm-badge-stalled">⏱ stalled ${sum.stalledDays} วัน</span>`);
+      return html`
+        <div class="rtm-project-card" data-open-project="${p.id}" style="border-left-color:${escape(border)}">
+          <div class="rtm-card-top">
+            <div class="rtm-card-title">${p.title}</div>
+            <div class="rtm-avatar-sm" style="background:${escape(lead?.color || "#4A4741")}" title="${escape(lead?.display_name || "lead")}">${escape(lead?.short_code || "?")}</div>
+          </div>
+          ${badges.length ? raw(`<div class="rtm-card-badges">${badges.join("")}</div>`) : ""}
+          <div class="rtm-card-kpi">🎯 ${p.kpi_text}</div>
+          <div class="rtm-card-meta">
+            <span>${raw(DELIVERABLE_LABELS[p.deliverable_type] || escape(p.deliverable_type || "—"))}</span>
+            ${p.impact_projected_value != null ? raw(`<span>· ${escape(p.impact_projected_value)} ${escape(p.impact_projected_unit || "")} (projected)</span>`) : ""}
+          </div>
+          <div class="rtm-mil-bar">${raw(milBar)}</div>
+          ${raw(nextLine)}
+          <div class="rtm-card-foot">${sum.done}/${sum.total} actions done</div>
+        </div>
+      `;
+    };
+
+    // ===== VIEW · project =====
+    const uiProject = { open: {}, addingAction: null, addingMilestone: false };
+
+    const viewProject = (params) => {
+      const pid = params.id;
+      store.set("currentProject", pid);
+      uiProject.addingAction = null;
+      uiProject.addingMilestone = false;
+      const outlet = document.querySelector("#route-outlet");
+      outlet.innerHTML = html`<div id="project-root"></div>`;
+      const renderAll = () => renderProject(pid);
+      renderAll();
+      const unsubs = [
+        store.subscribe("projects", renderAll),
+        store.subscribe("allMilestones", renderAll),
+        store.subscribe("allActions", renderAll),
+        store.subscribe("users", renderAll),
+      ];
+      return () => { unsubs.forEach(u => u()); store.set("currentProject", null); };
+    };
+
+    const renderProject = (pid) => {
+      const root = document.querySelector("#project-root");
+      if (!root) return;
+      const p = (store.get("projects") || []).find(x => x.id === pid);
+      if (!p) {
+        // projects may still be loading
+        const loaded = (store.get("projects") || []).length > 0;
+        root.innerHTML = loaded
+          ? html`<div class="rtm-empty">ไม่พบ project นี้ · <a href="#/live" style="color:var(--good-fg)">กลับ Live</a></div>`
+          : html`<div style="color:var(--ink-tertiary)">loading...</div>`;
+        return;
+      }
+      const lead = userByUid(p.owner_lead_uid);
+      const sum = projectSummary(p.id);
+      const closed = p.status === "closed";
+
+      root.innerHTML = html`
+        <div class="rtm-proj-breadcrumb">
+          <a href="#/live">🚀 Live</a> › <span>${p.title}</span>
+        </div>
+        <div class="rtm-proj-head">
+          <h1 style="font-size:var(--text-2xl)">${p.title}</h1>
+          <div style="display:flex;gap:var(--space-2)">
+            ${closed
+              ? raw(`<span class="rtm-badge" style="background:var(--sage-soft);color:var(--good-fg)">🔒 ปิดแล้ว</span>`)
+              : raw(`<button class="btn-secondary" id="btn-edit-project" style="padding:8px 14px">✏️ Edit</button>
+                     <button class="btn-primary" id="btn-close-project" style="padding:8px 14px">🔒 Close</button>`)}
+          </div>
+        </div>
+
+        <div class="rtm-proj-framework">
+          <div><span class="rtm-fw-key">WHY</span> ${p.why ? escape(p.why) : raw('<span style="color:var(--ink-tertiary)">— ไม่ระบุ —</span>')}</div>
+          <div><span class="rtm-fw-key">WHAT</span> ${raw(DELIVERABLE_LABELS[p.deliverable_type] || escape(p.deliverable_type))}</div>
+          <div><span class="rtm-fw-key">KPI</span> ${p.kpi_text}</div>
+          <div><span class="rtm-fw-key">WHO</span> <span class="rtm-avatar-sm" style="background:${escape(lead?.color || "#4A4741")};display:inline-flex;vertical-align:middle">${escape(lead?.short_code || "?")}</span> ${escape(lead?.display_name || "—")} lead</div>
+        </div>
+
+        <div class="rtm-proj-impact">
+          <div><span class="rtm-fw-key">Projected</span> ${p.impact_projected_value != null ? raw(`${escape(p.impact_projected_value)} ${escape(p.impact_projected_unit || "")}`) : "—"}</div>
+          <div><span class="rtm-fw-key">Actual</span> ${p.impact_actual_value != null
+            ? raw(`<b style="color:${(p.impact_actual_value >= (p.impact_projected_value ?? 0)) ? "var(--good-fg)" : "var(--warn-fg)"}">${escape(p.impact_actual_value)} ${escape(p.impact_actual_unit || "")}</b>${p.impact_verified_by_uid ? ` · verified by ${escape(userByUid(p.impact_verified_by_uid)?.short_code || "?")}` : ""}`)
+            : raw('<span style="color:var(--ink-tertiary)">— (ยังไม่ปิด)</span>')}</div>
+        </div>
+
+        ${closed && p.result_text ? raw(`
+          <div class="rtm-proj-result">
+            <div><b>Result:</b> ${escape(p.result_text)}</div>
+            ${p.lesson_learned ? `<div style="margin-top:6px"><b>💡 Lesson:</b> ${escape(p.lesson_learned)}</div>` : ""}
+            ${(p.lesson_tags||[]).length ? `<div style="margin-top:6px">${p.lesson_tags.map(t=>`<span class="rtm-tag-chip">${escape(t)}</span>`).join("")}</div>` : ""}
+          </div>
+        `) : ""}
+
+        <div class="rtm-proj-mils-head">
+          <h2>Milestones + Actions</h2>
+          ${closed ? "" : raw(`<button class="rtm-btn-inline" id="btn-add-milestone">+ Milestone</button>`)}
+        </div>
+        <div id="mils-list"></div>
+        <div id="add-mil-form"></div>
+      `;
+
+      document.querySelector("#btn-close-project")?.addEventListener("click", () => store.set("modal", { name: "close-project", projectId: p.id }));
+      document.querySelector("#btn-edit-project")?.addEventListener("click", () => store.set("modal", { name: "edit-project", projectId: p.id }));
+      document.querySelector("#btn-add-milestone")?.addEventListener("click", () => { uiProject.addingMilestone = true; renderProject(pid); });
+
+      renderMilestones(p, sum, closed);
+      renderAddMilestoneForm(p, pid);
+    };
+
+    const renderMilestones = (p, sum, closed) => {
+      const el = document.querySelector("#mils-list");
+      if (!el) return;
+      if (sum.mils.length === 0) {
+        el.innerHTML = html`<div class="rtm-empty" style="padding:var(--space-5)">ยังไม่มี milestone · เพิ่มด้านบน</div>`;
+        return;
+      }
+      el.innerHTML = html`${sum.mils.map(m => renderMilestoneBlock(p, m, closed))}`;
+      wireMilestoneEvents(p, closed);
+    };
+
+    const renderMilestoneBlock = (p, m, closed) => {
+      const acts = actionsOf(p.id, m.id).sort((a, b) =>
+        (toDate(a.due_date)?.getTime() ?? Infinity) - (toDate(b.due_date)?.getTime() ?? Infinity));
+      const st = acts.some(a => a.blocker_flag) ? "blocker" : milestoneDisplayStatus(acts);
+      const doneCount = acts.filter(a => a.status === "done").length;
+      const isOpen = uiProject.open[m.id] ?? (st !== "done");
+      return html`
+        <div class="rtm-mil-block">
+          <div class="rtm-mil-header" data-toggle-mil="${m.id}">
+            <span class="rtm-mil-caret">${isOpen ? "▾" : "▸"}</span>
+            <span class="rtm-mil-icon">${MILESTONE_ICON[st]}</span>
+            <span class="rtm-mil-name">${m.title}</span>
+            <span class="rtm-mil-sub">${doneCount}/${acts.length} · ${m.target_date ? "🎯 " + fmtDate(m.target_date) : "ไม่ตั้งวันที่"}</span>
+          </div>
+          ${isOpen ? raw(renderActionRows(p, m, acts, closed)) : ""}
+        </div>
+      `;
+    };
+
+    const renderActionRows = (p, m, acts, closed) => {
+      const rows = acts.map(a => {
+        const owner = userByUid(a.owner_uid);
+        const stalled = isStalled(a);
+        const d = daysUntil(a.due_date);
+        const overdue = a.due_date && d < 0 && a.status !== "done";
+        const box = a.status === "done" ? "☑" : a.status === "doing" ? "◐" : "☐";
+        const dueTxt = a.due_date ? fmtDate(a.due_date) : "—";
+        return `
+          <div class="rtm-action-row ${a.status === "done" ? "done" : ""}">
+            <button class="rtm-action-check" data-cycle="${a.id}" data-mil="${m.id}" ${closed ? "disabled" : ""} title="เปลี่ยนสถานะ">${box}</button>
+            <span class="rtm-action-title">${escape(a.title)}
+              ${a.blocker_flag ? `<span class="rtm-badge rtm-badge-blocker">🚩</span>` : ""}
+              ${stalled ? `<span class="rtm-badge rtm-badge-stalled">⏱ stalled</span>` : ""}
+            </span>
+            <span class="rtm-avatar-sm" style="background:${escape(owner?.color || "#4A4741")};width:18px;height:18px;font-size:10px" title="${escape(owner?.display_name || "?")}">${escape(owner?.short_code || "?")}</span>
+            <span class="rtm-action-due" style="color:${overdue ? "var(--danger-fg)" : "var(--ink-tertiary)"}">${dueTxt}</span>
+            ${closed ? "" : `<button class="rtm-icon-btn" data-block="${a.id}" title="Blocker">${a.blocker_flag ? "🚩" : "⚐"}</button>`}
+            ${closed ? "" : `<button class="rtm-icon-btn" data-del-action="${a.id}" data-mil="${m.id}" title="ลบ">🗑</button>`}
+          </div>`;
+      }).join("");
+      const addForm = (!closed && uiProject.addingAction === m.id)
+        ? renderAddActionForm(p, m)
+        : (closed ? "" : `<button class="rtm-add-action-btn" data-add-action="${m.id}">+ Add action</button>`);
+      return `<div class="rtm-action-list">${rows}${addForm}</div>`;
+    };
+
+    const renderAddActionForm = (p, m) => {
+      const users = store.get("users") || [];
+      return `
+        <div class="rtm-add-action-form">
+          <input type="text" id="aa-title" placeholder="ทำอะไร..." maxlength="140" />
+          <select id="aa-owner">
+            <option value="">owner</option>
+            ${users.map(u => `<option value="${escape(u.uid)}">${escape(u.short_code || u.display_name)}</option>`).join("")}
+          </select>
+          <input type="date" id="aa-due" />
+          <button class="rtm-btn-promote" id="aa-save" data-mil="${m.id}">Add</button>
+          <button class="rtm-icon-btn" id="aa-cancel">✕</button>
+          <div class="rtm-form-error" id="aa-err" style="flex-basis:100%">กรอก title + owner</div>
+          <div class="rtm-form-hint" id="aa-warn" style="flex-basis:100%;display:none;color:var(--warn-fg)">⚠ due เกิน 7 วัน — แตกเป็น 2 action ดีกว่า</div>
+        </div>`;
+    };
+
+    const wireMilestoneEvents = (p, closed) => {
+      document.querySelectorAll("[data-toggle-mil]").forEach(h => h.addEventListener("click", () => {
+        const id = h.dataset.toggleMil;
+        const acts = actionsOf(p.id, id);
+        const cur = uiProject.open[id] ?? (milestoneDisplayStatus(acts) !== "done");
+        uiProject.open[id] = !cur;
+        renderProject(p.id);
+      }));
+      if (closed) return;
+
+      document.querySelectorAll("[data-cycle]").forEach(b => b.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const id = b.dataset.cycle, mil = b.dataset.mil;
+        const a = actionsOf(p.id).find(x => x.id === id);
+        const next = a.status === "todo" ? "doing" : a.status === "doing" ? "done" : "todo";
+        b.disabled = true;
+        try { await setActionStatus(p.id, id, mil, next); }
+        catch (err) { alert("อัพเดตไม่สำเร็จ · " + err.message); b.disabled = false; }
+      }));
+
+      document.querySelectorAll("[data-block]").forEach(b => b.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const id = b.dataset.block;
+        const a = actionsOf(p.id).find(x => x.id === id);
+        let note = a.blocker_note;
+        if (!a.blocker_flag) { note = prompt("Blocker คืออะไร? (optional)", "") || null; }
+        try { await toggleActionBlocker(p.id, id, !a.blocker_flag, note); }
+        catch (err) { alert("Error · " + err.message); }
+      }));
+
+      document.querySelectorAll("[data-del-action]").forEach(b => b.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const id = b.dataset.delAction, mil = b.dataset.mil;
+        const a = actionsOf(p.id).find(x => x.id === id);
+        if (!confirm(`ลบ action "${a?.title || ""}" ?`)) return;
+        try { await deleteAction(p.id, id, mil); }
+        catch (err) { alert("ลบไม่สำเร็จ · " + err.message); }
+      }));
+
+      document.querySelectorAll("[data-add-action]").forEach(b => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        uiProject.addingAction = b.dataset.addAction;
+        renderProject(p.id);
+        document.querySelector("#aa-title")?.focus();
+      }));
+
+      wireAddActionForm(p);
+    };
+
+    const wireAddActionForm = (p) => {
+      const save = document.querySelector("#aa-save");
+      if (!save) return;
+      const titleEl = document.querySelector("#aa-title");
+      const dueEl = document.querySelector("#aa-due");
+      const warnEl = document.querySelector("#aa-warn");
+      const checkWarn = () => {
+        const d = dueEl.value ? Math.ceil((new Date(dueEl.value).getTime() - Date.now()) / 86400000) : 0;
+        warnEl.style.display = d > 7 ? "block" : "none";
+      };
+      dueEl?.addEventListener("change", checkWarn);
+      document.querySelector("#aa-cancel")?.addEventListener("click", () => { uiProject.addingAction = null; renderProject(p.id); });
+      const doAdd = async () => {
+        const title = titleEl.value.trim();
+        const owner = document.querySelector("#aa-owner").value;
+        const due = dueEl.value;
+        const mil = save.dataset.mil;
+        if (!title || !owner) { document.querySelector("#aa-err").classList.add("show"); return; }
+        save.disabled = true;
+        try {
+          await addAction(p.id, { milestone_id: mil, title, owner_uid: owner, due_date: due || null, output_text: "" });
+          // keep form open for rapid entry
+          renderProject(p.id);
+          document.querySelector("#aa-title")?.focus();
+        } catch (err) { alert("เพิ่ม action ไม่สำเร็จ · " + err.message); save.disabled = false; }
+      };
+      save.addEventListener("click", doAdd);
+      titleEl?.addEventListener("keydown", (e) => { if (e.key === "Enter") doAdd(); if (e.key === "Escape") { uiProject.addingAction = null; renderProject(p.id); } });
+    };
+
+    const renderAddMilestoneForm = (p, pid) => {
+      const el = document.querySelector("#add-mil-form");
+      if (!el) return;
+      if (!uiProject.addingMilestone) { el.innerHTML = ""; return; }
+      el.innerHTML = html`
+        <div class="rtm-add-action-form" style="margin-top:var(--space-3)">
+          <input type="text" id="am-title" placeholder="ชื่อ milestone..." maxlength="80" />
+          <input type="date" id="am-due" />
+          <button class="rtm-btn-promote" id="am-save">Add</button>
+          <button class="rtm-icon-btn" id="am-cancel">✕</button>
+        </div>
+      `;
+      document.querySelector("#am-title")?.focus();
+      const doAdd = async () => {
+        const title = document.querySelector("#am-title").value.trim();
+        const due = document.querySelector("#am-due").value;
+        if (!title) return;
+        const btn = document.querySelector("#am-save");
+        btn.disabled = true;
+        try { await addMilestone(pid, { title, target_date: due || null }); uiProject.addingMilestone = false; renderProject(pid); }
+        catch (err) { alert("เพิ่ม milestone ไม่สำเร็จ · " + err.message); btn.disabled = false; }
+      };
+      document.querySelector("#am-save")?.addEventListener("click", doAdd);
+      document.querySelector("#am-cancel")?.addEventListener("click", () => { uiProject.addingMilestone = false; renderProject(pid); });
+      document.querySelector("#am-title")?.addEventListener("keydown", (e) => { if (e.key === "Enter") doAdd(); if (e.key === "Escape") { uiProject.addingMilestone = false; renderProject(pid); } });
+    };
+
     // ===== STUB VIEWS =====
     const stub = name => () => {
       const el = document.querySelector("#route-outlet");
@@ -1382,8 +2082,8 @@
 
     route("/ideas",    viewIdeas);
     route("/decide",   viewDecide);
-    route("/live",     stub("🚀 Live Projects"));
-    route("/live/:id", p => stub(`🚀 Project ${p.id}`)());
+    route("/live",     viewLive);
+    route("/live/:id", viewProject);
     route("/my",       stub("📅 My Week"));
     route("/team",     stub("👥 Team Board"));
     route("/lessons",  stub("📚 Lessons"));
@@ -1599,6 +2299,111 @@
       `;
     };
 
+    // ===== MODAL · close-project =====
+    const renderCloseProjectModal = () => {
+      const m = store.get("modal");
+      const p = (store.get("projects") || []).find(x => x.id === m.projectId);
+      if (!p) return "";
+      const users = store.get("users") || [];
+      const unit = p.impact_projected_unit || "฿/เดือน";
+      return html`
+        <div class="rtm-modal-backdrop" data-close-modal>
+          <div class="rtm-modal" style="max-width:560px">
+            <h2>🔒 Close Project</h2>
+            <p class="rtm-modal-hint">"${p.title}"</p>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Result <span class="req">*</span> · ต้องมีตัวเลข</label>
+              <input type="text" id="cp-result" placeholder="เช่น Stockout ลด 28% ที่ 45 ร้าน" />
+              <div class="rtm-form-hint">บังคับตัวเลข = บังคับให้รู้ว่าจริง ๆ ได้เท่าไหร่</div>
+              <div class="rtm-form-error" id="err-cp-result">Result ต้องมีตัวเลข</div>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Impact — Actual <span class="req">*</span></label>
+              <div class="rtm-form-row-inline">
+                <input type="number" id="cp-impact" placeholder="เช่น 420000" step="0.01" />
+                <select id="cp-unit">
+                  ${IMPACT_UNITS.map(u => `<option value="${escape(u)}" ${u === unit ? "selected" : ""}>${escape(u)}</option>`)}
+                </select>
+              </div>
+              <div class="rtm-form-hint">กรอกของจริงที่วัดได้ · ไม่ใช่ตัวเลขที่ตั้งไว้ตอนเริ่ม</div>
+              <div class="rtm-form-error" id="err-cp-impact">กรอกตัวเลข impact จริง</div>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Verified by (optional)</label>
+              <select id="cp-verified">
+                <option value="">— ไม่ระบุ —</option>
+                ${users.map(u => `<option value="${escape(u.uid)}">${escape(u.display_name || u.email)} (${escape(u.short_code || "?")})</option>`)}
+              </select>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Lesson learned (แนะนำให้กรอก)</label>
+              <textarea id="cp-lesson" placeholder="เรียนรู้อะไร · จะโผล่ตอนมีไอเดียคล้ายกันในอนาคต" rows="2"></textarea>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Tags (คั่นด้วย comma)</label>
+              <input type="text" id="cp-tags" placeholder="Dashboard, KPI, Adoption" />
+            </div>
+
+            <div class="rtm-modal-actions">
+              <button class="btn-secondary" data-close-modal>ยกเลิก</button>
+              <button class="btn-primary" id="btn-modal-close-project">🎉 Close & Save</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    // ===== MODAL · edit-project =====
+    const renderEditProjectModal = () => {
+      const m = store.get("modal");
+      const p = (store.get("projects") || []).find(x => x.id === m.projectId);
+      if (!p) return "";
+      const users = store.get("users") || [];
+      return html`
+        <div class="rtm-modal-backdrop" data-close-modal>
+          <div class="rtm-modal" style="max-width:560px">
+            <h2>✏️ Edit Project</h2>
+            <p class="rtm-modal-hint">"${p.title}"</p>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Why</label>
+              <textarea id="ep-why" rows="2" placeholder="ทำเพราะอะไร">${escape(p.why || "")}</textarea>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Deliverable <span class="req">*</span></label>
+              <select id="ep-deliverable">
+                ${DELIVERABLE_TYPES.map(d => `<option value="${d.v}" ${d.v === p.deliverable_type ? "selected" : ""}>${d.label}</option>`)}
+              </select>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">KPI <span class="req">*</span> · ต้องมีตัวเลข</label>
+              <input type="text" id="ep-kpi" value="${escape(p.kpi_text || "")}" />
+              <div class="rtm-form-error" id="err-ep-kpi">KPI ต้องมีตัวเลข</div>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Owner Lead <span class="req">*</span></label>
+              <select id="ep-owner">
+                ${users.map(u => `<option value="${escape(u.uid)}" ${u.uid === p.owner_lead_uid ? "selected" : ""}>${escape(u.display_name || u.email)} (${escape(u.short_code || "?")})</option>`)}
+              </select>
+            </div>
+
+            <div class="rtm-modal-actions">
+              <button class="btn-secondary" data-close-modal>ยกเลิก</button>
+              <button class="btn-primary" id="btn-modal-edit-project">บันทึก</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
     // ===== MODAL RENDERER =====
     const closeModal = () => store.set("modal", null);
 
@@ -1612,6 +2417,8 @@
       else if (m.name === "session-picker") content = renderSessionPickerModal();
       else if (m.name === "triage") content = renderTriageModal();
       else if (m.name === "promote") content = renderPromoteModal();
+      else if (m.name === "close-project") content = renderCloseProjectModal();
+      else if (m.name === "edit-project") content = renderEditProjectModal();
       root.innerHTML = content;
       wireModalEvents();
     };
@@ -1756,6 +2563,65 @@
           btn.disabled = false;
         }
       });
+
+      // ===== CLOSE PROJECT WIRE =====
+      document.querySelector("#btn-modal-close-project")?.addEventListener("click", async () => {
+        const m = store.get("modal");
+        const p = (store.get("projects") || []).find(x => x.id === m.projectId);
+        if (!p) return;
+        const result = document.querySelector("#cp-result").value.trim();
+        const impact = parseFloat(document.querySelector("#cp-impact").value);
+        const unit = document.querySelector("#cp-unit").value;
+        const verified = document.querySelector("#cp-verified").value || null;
+        const lesson = document.querySelector("#cp-lesson").value.trim();
+        const tags = document.querySelector("#cp-tags").value.split(",").map(t => t.trim()).filter(Boolean);
+
+        let ok = true;
+        document.querySelectorAll(".rtm-form-error").forEach(e => e.classList.remove("show"));
+        if (!/\d/.test(result)) { document.querySelector("#err-cp-result")?.classList.add("show"); ok = false; }
+        if (!(impact >= 0)) { document.querySelector("#err-cp-impact")?.classList.add("show"); ok = false; }
+        if (!ok) return;
+
+        const btn = document.querySelector("#btn-modal-close-project");
+        btn.disabled = true;
+        try {
+          await closeProject(p, {
+            result_text: result,
+            impact_actual_value: impact,
+            impact_actual_unit: unit,
+            impact_verified_by_uid: verified,
+            lesson_learned: lesson || null,
+            lesson_tags: tags,
+          });
+          closeModal();
+          alert("🎉 ปิด project แล้ว" + (lesson ? " · lesson บันทึกเข้า Lessons" : ""));
+          go("/live");
+        } catch (e) { alert("ปิดไม่สำเร็จ · " + e.message); btn.disabled = false; }
+      });
+
+      // ===== EDIT PROJECT WIRE =====
+      document.querySelector("#btn-modal-edit-project")?.addEventListener("click", async () => {
+        const m = store.get("modal");
+        const why = document.querySelector("#ep-why").value.trim();
+        const deliverable = document.querySelector("#ep-deliverable").value;
+        const kpi = document.querySelector("#ep-kpi").value.trim();
+        const owner = document.querySelector("#ep-owner").value;
+
+        document.querySelectorAll(".rtm-form-error").forEach(e => e.classList.remove("show"));
+        if (!/\d/.test(kpi)) { document.querySelector("#err-ep-kpi")?.classList.add("show"); return; }
+
+        const btn = document.querySelector("#btn-modal-edit-project");
+        btn.disabled = true;
+        try {
+          await updateProject(m.projectId, {
+            why: why || null,
+            deliverable_type: deliverable,
+            kpi_text: kpi,
+            owner_lead_uid: owner,
+          });
+          closeModal();
+        } catch (e) { alert("บันทึกไม่สำเร็จ · " + e.message); btn.disabled = false; }
+      });
     };
 
     // ===== BOOT =====
@@ -1774,6 +2640,8 @@
         subscribeAllSessions();
         subscribeIdeas();
         subscribeProjects();
+        subscribeAllMilestones();
+        subscribeAllActions();
         store.subscribe("modal", mountModal);
         mountModal();
       }
