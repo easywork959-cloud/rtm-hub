@@ -1585,6 +1585,24 @@
       await writeLesson({ ...project, ...closing });
     };
 
+    // กดปิดผิด → กู้กลับ active · ล้างค่า close ทั้งหมด + ลบ lesson ที่เขียนตอนปิด
+    // (lesson ของ project ที่ยัง active = ข้อมูลค้าง · ปิดใหม่แล้ว writeLesson เขียนกลับเอง)
+    const reopenProject = async (project) => {
+      await updateDoc(doc(db, "projects", project.id), {
+        status: "active",
+        result_text: null,
+        impact_actual_value: null,
+        impact_actual_unit: null,
+        impact_verified_by_uid: null,
+        impact_verified_at: null,
+        lesson_learned: null,
+        lesson_tags: [],
+        closed_at: null,
+      });
+      const stale = (store.get("lessons") || []).filter(l => l.project_id === project.id);
+      for (const l of stale) await deleteDoc(doc(db, "lessons", l.id));
+    };
+
     // Step 8: read-side. writeLesson() (Step 5) already writes lessons/ on close.
     const subscribeLessons = () => {
       const q = query(collection(db, "lessons"), orderBy("closed_at", "desc"));
@@ -2230,7 +2248,8 @@
           <h1 style="font-size:var(--text-2xl)">${p.title}</h1>
           <div style="display:flex;gap:var(--space-2)">
             ${closed
-              ? raw(`${verdictBadge(p, "sm")}<span class="rtm-badge" style="background:var(--sage-soft);color:var(--good-fg)">🔒 ปิดแล้ว</span>`)
+              ? raw(`${verdictBadge(p, "sm")}<span class="rtm-badge" style="background:var(--sage-soft);color:var(--good-fg)">🔒 ปิดแล้ว</span>
+                     <button class="btn-secondary" id="btn-reopen-project" style="padding:8px 14px" title="กดปิดผิด? เปิดกลับมาแก้">↩️ เปิดใหม่</button>`)
               : raw(`<button class="btn-secondary" id="btn-edit-project" style="padding:8px 14px">✏️ Edit</button>
                      <button class="btn-primary" id="btn-close-project" style="padding:8px 14px">🔒 Close</button>`)}
           </div>
@@ -2269,6 +2288,12 @@
 
       document.querySelector("#btn-close-project")?.addEventListener("click", () => store.set("modal", { name: "close-project", projectId: p.id }));
       document.querySelector("#btn-edit-project")?.addEventListener("click", () => store.set("modal", { name: "edit-project", projectId: p.id }));
+      document.querySelector("#btn-reopen-project")?.addEventListener("click", async () => {
+        if (!confirm(`เปิด "${p.title}" กลับมาแก้?\n\nresult + impact + verdict + lesson ที่บันทึกตอนปิดจะถูกล้าง\nproject กลับไปอยู่ Live (active) · ปิดใหม่ได้`)) return;
+        const btn = document.querySelector("#btn-reopen-project");
+        if (btn) btn.disabled = true;
+        try { await reopenProject(p); } catch (e) { alert("เปิดใหม่ไม่สำเร็จ · " + e.message); if (btn) btn.disabled = false; }
+      });
       document.querySelector("#btn-add-milestone")?.addEventListener("click", () => { uiProject.addingMilestone = true; renderProject(pid); });
 
       renderMilestones(p, sum, closed);
@@ -3905,7 +3930,7 @@
       projectById, allLessonTags,
       computeVerdict, verdictBadge, closedProjects, renderClosedCard,
       viewScoreboard, scoreboardStats, ideaFunnel, inPeriod, periodBounds,
-      mountModal, closeModal, closeProject };
+      mountModal, closeModal, closeProject, reopenProject };
   </script>
 </body>
 </html>
