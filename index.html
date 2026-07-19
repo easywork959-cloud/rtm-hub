@@ -895,6 +895,9 @@
     .rtm-alert-row:last-child { border-bottom: none; }
     .rtm-alert-row a { color: var(--good-fg); text-decoration: none; white-space: nowrap; }
     .rtm-alert-good { color: var(--good-fg); }
+    .rtm-alert-danger { color: var(--danger-fg); font-weight: 500; }
+    .rtm-alert-warn { color: var(--warn-fg); }
+    .rtm-alert-sub { display: flex; gap: var(--space-3); flex-wrap: wrap; font-size: var(--text-xs); color: var(--ink-secondary); margin-bottom: var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); }
     .rtm-hl-row { display: flex; gap: var(--space-6); flex-wrap: wrap; font-size: var(--text-base); }
     .rtm-hl-num { font-weight: 600; font-size: var(--text-lg); }
   </style>
@@ -2616,35 +2619,54 @@
       const week = isoWeekStr();
       const short = uid => userByUid(uid)?.short_code || "?";
 
-      // 1) blocker + stalled actions (ดี = บน · แย่รวมล่าง ตาม Principle #5 — alerts = สิ่งที่ต้องจัดการ)
-      const probs = (store.get("allActions") || []).filter(a =>
-        activeIds.has(a.project_id) && a.status !== "done" && (a.blocker_flag || isStalled(a)));
-      probs.sort((a, b) => {
-        const ba = a.blocker_flag ? 0 : 1, bb = b.blocker_flag ? 0 : 1;
-        if (ba !== bb) return ba - bb;
-        return (daysSince(b.status_changed_at) || 0) - (daysSince(a.status_changed_at) || 0);
-      });
-      const rows = probs.map(a => {
-        const icon = a.blocker_flag ? "🚩" : "⏱";
-        const txt = a.blocker_flag ? (a.blocker_note || a.title) : a.title;
-        const stalledTxt = isStalled(a) ? ` · stalled ${daysSince(a.status_changed_at)} วัน` : "";
-        return `<div class="rtm-alert-row">${icon} <span>${escape(short(a.owner_uid))}: “${escape(txt)}”${escape(stalledTxt)}</span> <a href="#/live/${escape(a.project_id)}">${escape(projTitle(a.project_id))} →</a></div>`;
+      // 1 action = 1 row · list ราย action ให้ manager ตามต่อได้ (ไม่ใช่แค่ตัวเลข)
+      // แต่ละ action ติด flag ได้หลายอัน (blocker/overdue/stalled/due-soon) แต่โชว์แถวเดียว
+      const enrich = a => {
+        const d = a.due_date ? daysUntil(a.due_date) : null;
+        return { a, d,
+          blocker: !!a.blocker_flag,
+          stalled: isStalled(a),
+          overdue: d != null && d < 0,
+          dueSoon: d != null && d >= 0 && d <= 3 };
+      };
+      const issues = (store.get("allActions") || [])
+        .filter(a => activeIds.has(a.project_id) && a.status !== "done")
+        .map(enrich)
+        .filter(x => x.blocker || x.stalled || x.overdue || x.dueSoon);
+      // severity: blocker → overdue → stalled → due-soon (แย่สุดบน · Principle #5)
+      const sev = x => x.blocker ? 0 : x.overdue ? 1 : x.stalled ? 2 : 3;
+      issues.sort((p, q) => (sev(p) - sev(q)) || ((p.d ?? Infinity) - (q.d ?? Infinity)));
+
+      const dueLabel = d => d === 0 ? "ครบกำหนดวันนี้" : d === 1 ? "ครบกำหนดพรุ่งนี้" : `อีก ${d} วัน`;
+      const rows = issues.map(x => {
+        const a = x.a;
+        const icon = x.blocker ? "🚩" : x.overdue ? "⚠" : x.stalled ? "⏱" : "🕒";
+        const mainTxt = x.blocker ? (a.blocker_note || a.title) : a.title;
+        const tags = [];
+        if (x.overdue) tags.push(`<span class="rtm-alert-danger">เลยกำหนด ${Math.abs(x.d)} วัน</span>`);
+        else if (x.dueSoon) tags.push(`<span class="rtm-alert-warn">${dueLabel(x.d)}</span>`);
+        if (x.stalled) tags.push(`<span class="rtm-alert-warn">stalled ${daysSince(a.status_changed_at)} วัน</span>`);
+        const suffix = tags.length ? ` · ${tags.join(" · ")}` : "";
+        return `<div class="rtm-alert-row">${icon} <span>${escape(short(a.owner_uid))}: “${escape(mainTxt)}”${suffix}</span> <a href="#/live/${escape(a.project_id)}">${escape(projTitle(a.project_id))} →</a></div>`;
       });
 
-      // 2) missing check-in — เฉพาะ due window (ศ–อา) เพื่อไม่ให้ noise กลางสัปดาห์ (Principle #3 = passive)
+      // missing check-in — เฉพาะ due window (ศ–อา) เพื่อไม่ให้ noise กลางสัปดาห์ (Principle #3 = passive)
       const day = new Date().getDay();
       const dueWindow = day === 5 || day === 6 || day === 0;
-      if (dueWindow) {
-        members.filter(m => !checkinFor(m.uid, week)).forEach(m =>
-          rows.push(`<div class="rtm-alert-row">⏱ <span>${escape(m.short_code || "?")}: check-in ยังไม่ส่ง</span></div>`));
-      }
+      const missing = dueWindow ? members.filter(m => !checkinFor(m.uid, week)) : [];
+      missing.forEach(m =>
+        rows.push(`<div class="rtm-alert-row">⏱ <span>${escape(m.short_code || "?")}: check-in ยังไม่ส่ง</span></div>`));
 
-      // 3) due soon (≤ 3 วัน รวม overdue)
-      const dueSoon = (store.get("allActions") || []).filter(a => {
-        if (!activeIds.has(a.project_id) || a.status === "done" || !a.due_date) return false;
-        const d = daysUntil(a.due_date); return d != null && d <= 3;
-      }).length;
-      if (dueSoon > 0) rows.push(`<div class="rtm-alert-row">🕒 <span>${dueSoon} actions due ภายใน 3 วัน</span></div>`);
+      // summary subline — quick scan ว่ามีกี่อันแต่ละแบบ
+      const cnt = { blocker: 0, overdue: 0, stalled: 0, dueSoon: 0 };
+      issues.forEach(x => { if (x.blocker) cnt.blocker++; if (x.overdue) cnt.overdue++; if (x.stalled) cnt.stalled++; if (x.dueSoon && !x.overdue) cnt.dueSoon++; });
+      const subParts = [];
+      if (cnt.blocker) subParts.push(`🚩 ${cnt.blocker} blocker`);
+      if (cnt.overdue) subParts.push(`<span class="rtm-alert-danger">⚠ ${cnt.overdue} overdue</span>`);
+      if (cnt.stalled) subParts.push(`⏱ ${cnt.stalled} stalled`);
+      if (cnt.dueSoon) subParts.push(`🕒 ${cnt.dueSoon} due ≤3 วัน`);
+      if (missing.length) subParts.push(`⏱ ${missing.length} ยังไม่ check-in`);
+      const sub = subParts.length ? `<div class="rtm-alert-sub">${subParts.join(" · ")}</div>` : "";
 
       const body = rows.length
         ? rows.join("")
@@ -2652,6 +2674,7 @@
       el.innerHTML = html`${raw(`
         <div class="rtm-team-alerts">
           <h3>⚠ Alerts</h3>
+          ${sub}
           ${body}
         </div>`)}`;
     };
