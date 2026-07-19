@@ -813,7 +813,63 @@
       .sidebar nav a { margin: 0; padding: var(--space-2); text-align: center; font-size: var(--text-xs); }
       .main { padding: var(--space-4); padding-bottom: 80px; }
       .rtm-idea-grid { grid-template-columns: 1fr; }
+      .rtm-checkin-card { padding: var(--space-4); }
+      .rtm-checkin-actions { flex-direction: column-reverse; }
+      .rtm-checkin-actions button { width: 100%; }
     }
+
+    /* ===== MY WEEK + CHECK-IN ===== */
+    .rtm-my-head { display: flex; align-items: baseline; gap: var(--space-3); flex-wrap: wrap; }
+    .rtm-my-week { font-size: var(--text-sm); color: var(--ink-secondary); }
+    .rtm-my-h2 { font-size: var(--text-xl); margin: var(--space-5) 0 var(--space-2); }
+    .rtm-ck-banner {
+      margin-top: var(--space-3); padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md); font-size: var(--text-sm); border: 1px solid var(--border);
+    }
+    .rtm-ck-banner.good { background: var(--sage-soft); color: var(--good-fg); border-color: var(--sage); }
+    .rtm-ck-banner.warn { background: var(--peach-soft); color: var(--warn-fg); border-color: var(--peach); }
+    .rtm-ck-banner.subtle { background: var(--bg-subtle); color: var(--ink-secondary); }
+    .rtm-my-actions {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: var(--space-2) var(--space-4);
+    }
+    .rtm-my-projlink { color: var(--good-fg); font-size: var(--text-xs); }
+    .rtm-my-projlink:hover { text-decoration: underline; }
+
+    .rtm-checkin-card {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: var(--space-5);
+      margin-top: var(--space-6); box-shadow: var(--shadow-sm, 0 1px 2px rgba(44,42,38,.04));
+    }
+    .rtm-checkin-card.submitted { background: var(--sage-soft); border-color: var(--sage); }
+    .rtm-checkin-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-4); }
+    .rtm-checkin-head h2 { font-size: var(--text-xl); }
+    .rtm-ck-sum > div { margin: 6px 0; font-size: var(--text-sm); }
+    .rtm-ck-artifact-text { white-space: pre-line; color: var(--ink-secondary); }
+    .rtm-q { margin-bottom: var(--space-5); }
+    .rtm-q-label { font-weight: 600; font-size: var(--text-sm); margin-bottom: var(--space-2); }
+    .rtm-req { color: var(--danger-fg); }
+    .rtm-opt { color: var(--ink-tertiary); font-weight: 400; font-size: var(--text-xs); }
+    .rtm-q-hint { font-size: var(--text-xs); color: var(--ink-tertiary); margin-top: 6px; }
+    .rtm-q-none { font-size: var(--text-sm); color: var(--ink-tertiary); padding: var(--space-2) 0; }
+    .rtm-pick-list { display: flex; flex-direction: column; gap: 2px; }
+    .rtm-pick-row {
+      display: flex; align-items: flex-start; gap: var(--space-2);
+      padding: var(--space-2); border-radius: var(--radius-sm); cursor: pointer; font-size: var(--text-sm);
+    }
+    .rtm-pick-row:hover { background: var(--bg-subtle); }
+    .rtm-pick-row input { margin-top: 3px; accent-color: var(--sage); }
+    .rtm-artifact-tabs { display: flex; gap: var(--space-2); margin-bottom: var(--space-3); }
+    .rtm-inp, .rtm-ta {
+      width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); font: inherit; background: var(--bg-elevated);
+      outline: none; color: var(--ink-primary);
+    }
+    .rtm-ta { resize: vertical; line-height: var(--lh-normal); }
+    .rtm-inp:focus, .rtm-ta:focus { border-color: var(--sage); box-shadow: 0 0 0 3px var(--sage-soft); }
+    .rtm-checkin-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-4); }
+    .rtm-form-error#ck-art-err { display: none; margin-top: 6px; }
+    .rtm-form-error#ck-art-err.show { display: block; }
   </style>
 </head>
 <body>
@@ -896,13 +952,37 @@
     };
     const STALLED_DAYS = 14;
 
+    // ISO week + week window (My Week / Check-in) — Mon..Sun, local time
+    const isoWeekStr = (ref = new Date()) => {
+      const d = new Date(Date.UTC(ref.getFullYear(), ref.getMonth(), ref.getDate()));
+      const dayNum = (d.getUTCDay() + 6) % 7;            // Mon=0 .. Sun=6
+      d.setUTCDate(d.getUTCDate() - dayNum + 3);          // nearest Thursday
+      const year = d.getUTCFullYear();
+      const firstThu = new Date(Date.UTC(year, 0, 4));
+      const firstDayNum = (firstThu.getUTCDay() + 6) % 7;
+      firstThu.setUTCDate(firstThu.getUTCDate() - firstDayNum + 3);
+      const week = 1 + Math.round((d.getTime() - firstThu.getTime()) / (7 * 86400000));
+      return `${year}-W${String(week).padStart(2, "0")}`;
+    };
+    const weekBounds = (ref = new Date()) => {
+      const d = new Date(ref); const dow = (d.getDay() + 6) % 7; // Mon=0
+      const mon = new Date(d); mon.setDate(d.getDate() - dow); mon.setHours(0, 0, 0, 0);
+      const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23, 59, 59, 999);
+      return { mon, sun };
+    };
+    const weekLabel = (ref = new Date()) => {
+      const { mon, sun } = weekBounds(ref);
+      return `${mon.getDate()} ${TH_MONTHS[mon.getMonth()]} – ${sun.getDate()} ${TH_MONTHS[sun.getMonth()]}`;
+    };
+    const inThisWeek = (ts) => { const d = toDate(ts); if (!d) return false; const { mon, sun } = weekBounds(); return d >= mon && d <= sun; };
+
     // ===== STORE =====
     const state = {
       auth: { user: null, profile: null, ready: false, blocked: false },
       route: { path: "/ideas", params: {} },
       ideas: [], projects: [], users: [], sessions: [], activeSession: null,
       currentProject: null, myActions: [], lessons: [],
-      allMilestones: [], allActions: [],
+      allMilestones: [], allActions: [], myCheckin: null,
       modal: null, toasts: [],
       ideasFilter: "all",
       liveFilter: "all", liveSort: "due",
@@ -2073,6 +2153,315 @@
       document.querySelector("#am-title")?.addEventListener("keydown", (e) => { if (e.key === "Enter") doAdd(); if (e.key === "Escape") { uiProject.addingMilestone = false; renderProject(pid); } });
     };
 
+    // ===== DATA · checkins =====
+    const myUid = () => (store.get("auth").user || {}).uid;
+    const draftKey = (uid, week) => `rtmhub:checkin_draft:${uid}:${week}`;
+    const loadDraft = (uid, week) => { try { return JSON.parse(localStorage.getItem(draftKey(uid, week)) || "null"); } catch (e) { return null; } };
+    const saveDraft = (uid, week, data) => { try { localStorage.setItem(draftKey(uid, week), JSON.stringify(data)); } catch (e) {} };
+    const clearDraft = (uid, week) => { try { localStorage.removeItem(draftKey(uid, week)); } catch (e) {} };
+
+    const subscribeMyCheckin = (uid, week) =>
+      onSnapshot(doc(db, "users", uid, "checkins", week), snap =>
+        store.set("myCheckin", snap.exists() ? { id: snap.id, ...snap.data() } : null));
+
+    // Artifact required (Non-Negotiable #3): link/screenshot = URL · text = 3+ non-empty lines
+    const validateArtifact = (type, value) => {
+      const v = (value || "").trim();
+      if (!v) return false;
+      if (type === "text") return v.split(/\n/).map(s => s.trim()).filter(Boolean).length >= 3;
+      return /^(https?:\/\/|www\.)\S+/i.test(v);
+    };
+
+    const submitCheckin = async (uid, week, form) => {
+      const all = store.get("allActions") || [];
+      // Auto-effect (MASTER_SPEC §5): ticking an action closes it → milestone auto-close
+      for (const aid of form.completed_action_ids) {
+        const a = all.find(x => x.id === aid && x.owner_uid === uid);
+        if (a && a.status !== "done") await setActionStatus(a.project_id, a.id, a.milestone_id, "done");
+      }
+      const projectIds = [...new Set(form.completed_action_ids
+        .map(aid => all.find(x => x.id === aid)?.project_id).filter(Boolean))];
+      await setDoc(doc(db, "users", uid, "checkins", week), {
+        week_of: week,
+        submitted_at: serverTimestamp(),
+        completed_action_ids: form.completed_action_ids,
+        artifact: { type: form.artifact_type, value: form.artifact_value.trim() },
+        next_week_action_ids: form.next_week_action_ids,
+        blocker_note: form.blocker_note ? form.blocker_note.trim() : null,
+        project_ids: projectIds,
+        tenant_id: TENANT_ID,
+        dc_id: DC_ID,
+      });
+      clearDraft(uid, week);
+    };
+
+    // ===== VIEW · my =====
+    const uiMy = { editing: false, type: "link" };
+
+    const myWeekActions = (uid) => {
+      const { sun } = weekBounds();
+      return (store.get("allActions") || [])
+        .filter(a => a.owner_uid === uid && a.status !== "done")
+        .filter(a => {
+          const due = toDate(a.due_date);
+          if (!due) return a.status === "doing" || a.blocker_flag; // surface active no-due tasks
+          return due.getTime() <= sun.getTime();                    // this week + overdue
+        })
+        .sort((a, b) => {
+          const ba = a.blocker_flag ? 0 : 1, bb = b.blocker_flag ? 0 : 1;
+          if (ba !== bb) return ba - bb;
+          return (toDate(a.due_date)?.getTime() ?? Infinity) - (toDate(b.due_date)?.getTime() ?? Infinity);
+        });
+    };
+    const myDoneThisWeek = (uid) =>
+      (store.get("allActions") || []).filter(a =>
+        a.owner_uid === uid && a.status === "done" && inThisWeek(a.done_at));
+
+    const projTitle = (pid) => (store.get("projects") || []).find(p => p.id === pid)?.title || "—";
+
+    const viewMy = () => {
+      const uid = myUid();
+      const week = isoWeekStr();
+      uiMy.editing = false;
+      const draft = loadDraft(uid, week);
+      uiMy.type = draft?.artifact_type || "link";
+      const outlet = document.querySelector("#route-outlet");
+      outlet.innerHTML = html`
+        <div id="my-root">
+          <div id="my-head"></div>
+          <h2 class="rtm-my-h2">งานของฉันสัปดาห์นี้</h2>
+          <div id="my-actions"></div>
+          <div id="my-checkin"></div>
+        </div>`;
+      renderMyHead(uid, week);
+      renderMyActions(uid);
+      renderMyCheckin(uid, week);
+      const unsubMs = subscribeMyCheckin(uid, week);
+      const unsubs = [
+        store.subscribe("allActions", () => { renderMyHead(uid, week); renderMyActions(uid); }),
+        store.subscribe("myCheckin", () => { renderMyHead(uid, week); renderMyCheckin(uid, week); }),
+        store.subscribe("users", () => renderMyActions(uid)),
+        store.subscribe("projects", () => renderMyActions(uid)),
+      ];
+      return () => { unsubs.forEach(u => u()); if (unsubMs) unsubMs(); store.set("myCheckin", null); };
+    };
+
+    const renderMyHead = (uid, week) => {
+      const el = document.querySelector("#my-head");
+      if (!el) return;
+      const ck = store.get("myCheckin");
+      const day = new Date().getDay();                 // 0 Sun .. 5 Fri .. 6 Sat
+      const isDue = day === 5 || day === 6 || day === 0; // Fri–Sun reminder window
+      let banner;
+      if (ck) {
+        banner = `<div class="rtm-ck-banner good">✅ ส่ง check-in สัปดาห์นี้แล้ว · ${escape(fmtRelTime(ck.submitted_at))}</div>`;
+      } else if (isDue) {
+        banner = `<div class="rtm-ck-banner warn">⏰ ได้เวลา check-in — สรุปสัปดาห์นี้ก่อนศุกร์ 17:00 (เลื่อนลงไปกรอกด้านล่าง)</div>`;
+      } else {
+        banner = `<div class="rtm-ck-banner subtle">📅 Check-in ส่งได้ทุกเมื่อ · กำหนดส่งศุกร์ 17:00</div>`;
+      }
+      el.innerHTML = html`
+        <div class="rtm-my-head">
+          <h1 style="font-size:var(--text-2xl)">📅 My Week</h1>
+          <span class="rtm-my-week">${weekLabel()} · ${week}</span>
+        </div>
+        ${raw(banner)}
+      `;
+    };
+
+    const myActionRow = (a) => {
+      const owner = userByUid(a.owner_uid);
+      const stalled = isStalled(a);
+      const d = daysUntil(a.due_date);
+      const overdue = a.due_date && d != null && d < 0;
+      const box = a.status === "doing" ? "◐" : "☐";
+      const dueTxt = a.due_date ? (overdue ? `เกิน ${Math.abs(d)} วัน` : fmtDate(a.due_date)) : "—";
+      return `
+        <div class="rtm-action-row">
+          <button class="rtm-action-check" data-my-cycle="${escape(a.id)}" data-proj="${escape(a.project_id)}" data-mil="${escape(a.milestone_id || "")}" title="เปลี่ยนสถานะ">${box}</button>
+          <span class="rtm-action-title">${escape(a.title)}
+            <a class="rtm-my-projlink" href="#/live/${escape(a.project_id)}">${escape(projTitle(a.project_id))}</a>
+            ${a.blocker_flag ? `<span class="rtm-badge rtm-badge-blocker">🚩</span>` : ""}
+            ${stalled ? `<span class="rtm-badge rtm-badge-stalled">⏱ stalled</span>` : ""}
+          </span>
+          <span class="rtm-avatar-sm" style="background:${escape(owner?.color || "#4A4741")};width:18px;height:18px;font-size:10px" title="${escape(owner?.display_name || "?")}">${escape(owner?.short_code || "?")}</span>
+          <span class="rtm-action-due" style="color:${overdue ? "var(--danger-fg)" : "var(--ink-tertiary)"}">${dueTxt}</span>
+        </div>`;
+    };
+
+    const renderMyActions = (uid) => {
+      const el = document.querySelector("#my-actions");
+      if (!el) return;
+      const acts = myWeekActions(uid);
+      if (acts.length === 0) {
+        el.innerHTML = html`<div class="rtm-empty">สัปดาห์นี้ยังไม่มีงานของคุณ · รอ manager assign หรือดูโปรเจกต์ที่เกี่ยว</div>`;
+        return;
+      }
+      el.innerHTML = html`<div class="rtm-my-actions">${raw(acts.map(myActionRow).join(""))}</div>`;
+      el.querySelectorAll("[data-my-cycle]").forEach(b => b.addEventListener("click", async () => {
+        const id = b.dataset.myCycle, pid = b.dataset.proj, mil = b.dataset.mil || null;
+        const a = (store.get("allActions") || []).find(x => x.id === id);
+        if (!a) return;
+        const next = a.status === "todo" ? "doing" : a.status === "doing" ? "done" : "todo";
+        b.disabled = true;
+        try { await setActionStatus(pid, id, mil, next); }
+        catch (err) { alert("อัพเดตไม่สำเร็จ · " + err.message); b.disabled = false; }
+      }));
+    };
+
+    const renderMyCheckin = (uid, week) => {
+      const el = document.querySelector("#my-checkin");
+      if (!el) return;
+      const ck = store.get("myCheckin");
+      if (ck && !uiMy.editing) { renderCheckinSummary(el, ck); return; }
+      renderCheckinForm(el, uid, week, ck);
+    };
+
+    const renderCheckinSummary = (el, ck) => {
+      const done = (ck.completed_action_ids || []).length;
+      const next = (ck.next_week_action_ids || []).length;
+      const art = ck.artifact || {};
+      const artView = art.type === "text"
+        ? `<div class="rtm-ck-artifact-text">${escape(art.value || "")}</div>`
+        : `<a href="${escape(art.value || "#")}" target="_blank" rel="noopener" class="rtm-my-projlink">${escape(art.value || "")}</a>`;
+      el.innerHTML = html`
+        <div class="rtm-checkin-card submitted">
+          <div class="rtm-checkin-head">
+            <h2>✅ Check-in สัปดาห์นี้</h2>
+            <button class="btn-secondary" id="btn-ck-edit" style="padding:6px 14px">✏️ แก้ไข</button>
+          </div>
+          <div class="rtm-ck-sum">
+            <div><b>เสร็จ:</b> ${done} action${done > 1 ? "s" : ""}</div>
+            <div><b>Artifact:</b> ${raw(artView)}</div>
+            <div><b>สัปดาห์หน้า:</b> ${next} action${next > 1 ? "s" : ""}</div>
+            ${ck.blocker_note ? raw(`<div><b>🚩 Blocker:</b> ${escape(ck.blocker_note)}</div>`) : ""}
+          </div>
+        </div>
+      `;
+      el.querySelector("#btn-ck-edit")?.addEventListener("click", () => { uiMy.editing = true; renderMyCheckin(myUid(), isoWeekStr()); });
+    };
+
+    const renderCheckinForm = (el, uid, week, ck) => {
+      const draft = loadDraft(uid, week) || {};
+      const base = ck || {};
+      const doneIds = new Set(draft.completed_action_ids || base.completed_action_ids ||
+        myDoneThisWeek(uid).map(a => a.id));
+      const nextIds = new Set(draft.next_week_action_ids || base.next_week_action_ids || []);
+      const artType = uiMy.type;
+      const artVal = draft.artifact_value ?? base.artifact?.value ?? "";
+      const blockerVal = draft.blocker_note ?? base.blocker_note ?? "";
+
+      // Q1 candidates = my open-this-week actions + done-this-week (dedupe)
+      const cand = [...myWeekActions(uid), ...myDoneThisWeek(uid)];
+      const seen = new Set(); const q1 = [];
+      for (const a of cand) { if (!seen.has(a.id)) { seen.add(a.id); q1.push(a); } }
+      const openActs = myWeekActions(uid);
+
+      const pickRow = (a, kind, checkedSet) => {
+        const isDone = a.status === "done";
+        return `<label class="rtm-pick-row">
+          <input type="checkbox" data-ck-${kind}="${escape(a.id)}" ${checkedSet.has(a.id) ? "checked" : ""} />
+          <span>${escape(a.title)} <span class="rtm-my-projlink" style="text-decoration:none">· ${escape(projTitle(a.project_id))}</span>${isDone ? ' <span class="rtm-badge" style="background:var(--sage-soft);color:var(--good-fg)">done</span>' : ""}</span>
+        </label>`;
+      };
+
+      el.innerHTML = html`
+        <div class="rtm-checkin-card">
+          <div class="rtm-checkin-head"><h2>📝 Weekly Check-in</h2>${ck ? raw('<button class="rtm-icon-btn" id="btn-ck-cancel" title="ยกเลิกการแก้ไข">✕</button>') : ""}</div>
+
+          <div class="rtm-q">
+            <div class="rtm-q-label">1 · สัปดาห์นี้เสร็จ action ไหน</div>
+            ${q1.length ? raw(`<div class="rtm-pick-list">${q1.map(a => pickRow(a, "done", doneIds)).join("")}</div>`)
+                        : raw('<div class="rtm-q-none">ยังไม่มี action ของคุณสัปดาห์นี้</div>')}
+            <div class="rtm-q-hint">ติ๊กแล้วจะปิด action นั้นให้อัตโนมัติตอนส่ง</div>
+          </div>
+
+          <div class="rtm-q">
+            <div class="rtm-q-label">2 · Artifact <span class="rtm-req">*</span></div>
+            <div class="rtm-artifact-tabs">
+              <button type="button" class="rtm-pill ${artType !== "text" ? "active" : ""}" data-art-type="link">🔗 ลิงก์ / สกรีนช็อต</button>
+              <button type="button" class="rtm-pill ${artType === "text" ? "active" : ""}" data-art-type="text">📝 ข้อความ</button>
+            </div>
+            ${artType === "text"
+              ? raw(`<textarea id="ck-artifact" class="rtm-ta" rows="4" placeholder="สรุปสิ่งที่ทำ 3 บรรทัดขึ้นไป...">${escape(artVal)}</textarea>`)
+              : raw(`<input id="ck-artifact" type="url" class="rtm-inp" placeholder="https://... (ลิงก์ไฟล์ / รูป / dashboard)" value="${escape(artVal)}" />`)}
+            <div class="rtm-form-error" id="ck-art-err">ต้องแนบ artifact — link, screenshot, หรือ note 3+ บรรทัด</div>
+          </div>
+
+          <div class="rtm-q">
+            <div class="rtm-q-label">3 · สัปดาห์หน้าจะทำ action ไหน</div>
+            ${openActs.length ? raw(`<div class="rtm-pick-list">${openActs.map(a => pickRow(a, "next", nextIds)).join("")}</div>`)
+                              : raw('<div class="rtm-q-none">ไม่มี action ค้าง</div>')}
+          </div>
+
+          <div class="rtm-q">
+            <div class="rtm-q-label">4 · Blocker <span class="rtm-opt">(optional)</span></div>
+            <textarea id="ck-blocker" class="rtm-ta" rows="2" placeholder="ติดอะไรอยู่? ปล่อยว่างได้">${escape(blockerVal)}</textarea>
+          </div>
+
+          <div class="rtm-checkin-actions">
+            <button class="btn-secondary" id="btn-ck-draft">บันทึกร่าง</button>
+            <button class="btn-primary" id="btn-ck-submit">${ck ? "อัพเดต Check-in" : "ส่ง Check-in"}</button>
+          </div>
+        </div>
+      `;
+      wireCheckinForm(uid, week, ck);
+    };
+
+    const gatherCheckinForm = () => {
+      const type = uiMy.type;
+      const value = document.querySelector("#ck-artifact")?.value || "";
+      const completed = [...document.querySelectorAll("[data-ck-done]:checked")].map(x => x.dataset.ckDone);
+      const next = [...document.querySelectorAll("[data-ck-next]:checked")].map(x => x.dataset.ckNext);
+      const blocker = document.querySelector("#ck-blocker")?.value || "";
+      return { artifact_type: type, artifact_value: value, completed_action_ids: completed, next_week_action_ids: next, blocker_note: blocker };
+    };
+
+    const wireCheckinForm = (uid, week, ck) => {
+      const el = document.querySelector("#my-checkin");
+      const persist = () => saveDraft(uid, week, gatherCheckinForm());
+      el.querySelectorAll("input, textarea").forEach(i => i.addEventListener("input", persist));
+      el.querySelectorAll('input[type="checkbox"]').forEach(i => i.addEventListener("change", persist));
+
+      el.querySelectorAll("[data-art-type]").forEach(b => b.addEventListener("click", () => {
+        persist();                       // keep whatever is typed
+        uiMy.type = b.dataset.artType;
+        const d = loadDraft(uid, week) || {};
+        d.artifact_type = uiMy.type;
+        saveDraft(uid, week, d);
+        renderCheckinForm(el, uid, week, ck);
+      }));
+
+      el.querySelector("#btn-ck-cancel")?.addEventListener("click", () => { uiMy.editing = false; renderMyCheckin(uid, week); });
+
+      el.querySelector("#btn-ck-draft")?.addEventListener("click", () => {
+        persist();
+        const b = el.querySelector("#btn-ck-draft");
+        b.textContent = "บันทึกแล้ว ✓"; b.disabled = true;
+        setTimeout(() => { const x = document.querySelector("#btn-ck-draft"); if (x) { x.textContent = "บันทึกร่าง"; x.disabled = false; } }, 1500);
+      });
+
+      el.querySelector("#btn-ck-submit")?.addEventListener("click", async () => {
+        const form = gatherCheckinForm();
+        const errEl = el.querySelector("#ck-art-err");
+        if (!validateArtifact(form.artifact_type, form.artifact_value)) {
+          errEl.classList.add("show");
+          document.querySelector("#ck-artifact")?.focus();
+          return;
+        }
+        errEl.classList.remove("show");
+        const btn = el.querySelector("#btn-ck-submit");
+        btn.disabled = true; btn.textContent = "กำลังส่ง...";
+        try {
+          await submitCheckin(uid, week, form);
+          uiMy.editing = false;               // myCheckin snapshot → re-render to summary
+        } catch (err) {
+          alert("ส่ง check-in ไม่สำเร็จ · " + err.message);
+          btn.disabled = false; btn.textContent = ck ? "อัพเดต Check-in" : "ส่ง Check-in";
+        }
+      });
+    };
+
     // ===== STUB VIEWS =====
     const stub = name => () => {
       const el = document.querySelector("#route-outlet");
@@ -2084,7 +2473,7 @@
     route("/decide",   viewDecide);
     route("/live",     viewLive);
     route("/live/:id", viewProject);
-    route("/my",       stub("📅 My Week"));
+    route("/my",       viewMy);
     route("/team",     stub("👥 Team Board"));
     route("/lessons",  stub("📚 Lessons"));
 
