@@ -1026,6 +1026,37 @@
       body { background: #fff !important; }
     }
 
+    /* ===== RESOURCES + EVIDENCE (Step 10) ===== */
+    .rtm-evidence-section { margin-top: var(--space-6); }
+    .rtm-evidence-section h2 { font-size: var(--text-xl); }
+    .rtm-ev-sub { font-size: var(--text-xs); color: var(--ink-tertiary); margin: 4px 0 var(--space-3); }
+    .rtm-res-box, .rtm-ev-box {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--radius-md); padding: var(--space-4) var(--space-5);
+      margin-bottom: var(--space-3);
+    }
+    .rtm-res-box { border-left: 3px solid var(--peach); }
+    .rtm-res-item {
+      display: flex; align-items: center; gap: var(--space-2);
+      padding: var(--space-2) 0; border-bottom: 1px solid var(--border); font-size: var(--text-sm);
+    }
+    .rtm-res-item:last-child { border-bottom: none; }
+    .rtm-res-link { flex: 1; word-break: break-all; }
+    .rtm-res-link a { color: var(--good-fg); }
+    .rtm-res-label { color: var(--ink-primary); font-weight: 500; }
+    .rtm-res-meta { font-size: var(--text-xs); color: var(--ink-tertiary); white-space: nowrap; }
+    .rtm-ev-item {
+      display: flex; gap: var(--space-3); padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--border); font-size: var(--text-sm);
+    }
+    .rtm-ev-item:last-child { border-bottom: none; }
+    .rtm-ev-icon { font-size: var(--text-lg); line-height: 1.4; width: 24px; text-align: center; flex-shrink: 0; }
+    .rtm-ev-body { flex: 1; min-width: 0; }
+    .rtm-ev-kind { font-size: var(--text-xs); font-weight: 600; color: var(--ink-tertiary); letter-spacing: .03em; }
+    .rtm-ev-text { margin: 2px 0; white-space: pre-wrap; word-break: break-word; }
+    .rtm-ev-text a { color: var(--good-fg); word-break: break-all; }
+    .rtm-ev-when { font-size: var(--text-xs); color: var(--ink-tertiary); white-space: nowrap; flex-shrink: 0; }
+
   </style>
 </head>
 <body>
@@ -1462,6 +1493,23 @@
       await updateDoc(doc(db, "projects", projectId), patch);
     };
 
+    // Resources: paste-URL bookmark ต่อ project (Step 10 · Kill List #11 = ห้าม upload)
+    // เก็บเป็น array field บน project doc · read-modify-write (resources เล็ก · serverTimestamp() ใช้ใน array ไม่ได้ → Date.now())
+    const projectResources = (p) => Array.isArray(p?.resources) ? p.resources : [];
+    const addResource = async (projectId, { label, url }) => {
+      const p = (store.get("projects") || []).find(x => x.id === projectId);
+      const lb = (label || "").trim();
+      if (!lb) throw new Error("label required");            // label บังคับ
+      const u = (url || "").trim();
+      if (u && !/^https?:\/\//i.test(u)) throw new Error("url must be http(s)://");
+      const entry = { label: lb, url: u || null, added_by: myUid(), added_at: Date.now() };
+      await updateDoc(doc(db, "projects", projectId), { resources: [...projectResources(p), entry] });
+    };
+    const removeResource = async (projectId, idx) => {
+      const p = (store.get("projects") || []).find(x => x.id === projectId);
+      await updateDoc(doc(db, "projects", projectId), { resources: projectResources(p).filter((_, i) => i !== idx) });
+    };
+
     // ===== DATA · milestones =====
     // collectionGroup: 1 listener covers every project's milestones (v1 = 1 tenant)
     const subscribeAllMilestones = () => {
@@ -1696,6 +1744,29 @@
         .filter(a => a.status !== "done")
         .sort((a, b) => (toDate(a.due_date)?.getTime() ?? Infinity) - (toDate(b.due_date)?.getTime() ?? Infinity))[0] || null;
       return { acts, mils, total, done, hasBlocker, stalled, stalledDays, nextAction };
+    };
+
+    // ===== DERIVED · evidence trail (Step 10 · North Star §3) =====
+    // รวมหลักฐานที่มีอยู่แล้วมากองที่เดียว — derived · ไม่แก้ schema
+    //   check-in artifact (project_ids มี pid) + action output_text + close result_text
+    // เรียงใหม่สุดก่อน (ล่าสุด = relevant สุด · ตรง convention app)
+    const projectEvidence = (pid) => {
+      const items = [];
+      (store.get("allCheckins") || []).forEach(c => {
+        const val = ((c.artifact && c.artifact.value) || "").trim();
+        if (val && (c.project_ids || []).includes(pid)) {
+          items.push({ kind: "checkin", by: c.uid, at: c.submitted_at, text: val, artifactType: c.artifact.type, week: c.week_of });
+        }
+      });
+      actionsOf(pid).forEach(a => {
+        const out = (a.output_text || "").trim();
+        if (out) items.push({ kind: "action", by: a.owner_uid, at: a.done_at || a.status_changed_at || a.created_at, text: out, title: a.title });
+      });
+      const p = (store.get("projects") || []).find(x => x.id === pid);
+      if (p && p.status === "closed" && (p.result_text || "").trim()) {
+        items.push({ kind: "result", by: p.impact_verified_by_uid || null, at: p.closed_at, text: p.result_text.trim() });
+      }
+      return items.sort((a, b) => (toDate(b.at)?.getTime() ?? 0) - (toDate(a.at)?.getTime() ?? 0));
     };
 
     // ===== DERIVED · verdict (North Star teeth — Step 9) =====
@@ -2232,13 +2303,14 @@
     };
 
     // ===== VIEW · project =====
-    const uiProject = { open: {}, addingAction: null, addingMilestone: false };
+    const uiProject = { open: {}, addingAction: null, addingMilestone: false, addingResource: false };
 
     const viewProject = (params) => {
       const pid = params.id;
       store.set("currentProject", pid);
       uiProject.addingAction = null;
       uiProject.addingMilestone = false;
+      uiProject.addingResource = false;
       const outlet = document.querySelector("#route-outlet");
       outlet.innerHTML = html`<div id="project-root"></div>`;
       const renderAll = () => renderProject(pid);
@@ -2247,6 +2319,7 @@
         store.subscribe("projects", renderAll),
         store.subscribe("allMilestones", renderAll),
         store.subscribe("allActions", renderAll),
+        store.subscribe("allCheckins", renderAll),   // Step 10: evidence trail อ่าน check-in artifact
         store.subscribe("users", renderAll),
       ];
       return () => { unsubs.forEach(u => u()); store.set("currentProject", null); };
@@ -2313,6 +2386,7 @@
         </div>
         <div id="mils-list"></div>
         <div id="add-mil-form"></div>
+        <div id="evidence-root"></div>
       `;
 
       document.querySelector("#btn-close-project")?.addEventListener("click", () => store.set("modal", { name: "close-project", projectId: p.id }));
@@ -2328,6 +2402,7 @@
 
       renderMilestones(p, sum, closed);
       renderAddMilestoneForm(p, pid);
+      renderEvidence(p, closed);
     };
 
     const renderMilestones = (p, sum, closed) => {
@@ -2508,6 +2583,109 @@
       document.querySelector("#am-save")?.addEventListener("click", doAdd);
       document.querySelector("#am-cancel")?.addEventListener("click", () => { uiProject.addingMilestone = false; renderProject(pid); });
       document.querySelector("#am-title")?.addEventListener("keydown", (e) => { if (e.key === "Enter") doAdd(); if (e.key === "Escape") { uiProject.addingMilestone = false; renderProject(pid); } });
+    };
+
+    // ===== VIEW · project · evidence (Step 10) =====
+    const EV_META = {
+      checkin: { icon: "📅", label: "Check-in artifact" },
+      action:  { icon: "✅", label: "Action output" },
+      result:  { icon: "🏁", label: "Close result" },
+    };
+    // escape ก่อน แล้วค่อยทำ URL เป็นลิงก์ (กัน HTML injection)
+    const linkify = (s) => escape(s).replace(/(https?:\/\/[^\s]+)/g,
+      u => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+
+    const renderEvidence = (p, closed) => {
+      const el = document.querySelector("#evidence-root");
+      if (!el) return;
+      const res = projectResources(p);
+      const ev = projectEvidence(p.id);
+
+      const resItems = res.length
+        ? res.map((r, i) => `
+            <div class="rtm-res-item">
+              <span class="rtm-res-link">${r.url
+                ? `<a href="${escape(r.url)}" target="_blank" rel="noopener"><span class="rtm-res-label">${escape(r.label)}</span> ↗</a>`
+                : `<span class="rtm-res-label">${escape(r.label)}</span>`}</span>
+              <span class="rtm-res-meta">${escape(userByUid(r.added_by)?.short_code || "?")} · ${fmtDate(r.added_at)}</span>
+              ${closed ? "" : `<button class="rtm-icon-btn" data-del-res="${i}" title="ลบลิงก์">🗑</button>`}
+            </div>`).join("")
+        : `<div style="font-size:var(--text-sm);color:var(--ink-tertiary)">ยังไม่มีลิงก์ที่เพิ่มเอง</div>`;
+
+      const addForm = closed ? "" : (uiProject.addingResource
+        ? `<div class="rtm-add-action-form" style="margin-top:var(--space-2)">
+             <input type="text" id="ar-label" placeholder="ชื่อ/คำอธิบาย (บังคับ)" maxlength="120" />
+             <input type="text" id="ar-url" placeholder="https://... (วางลิงก์ · ถ้ามี)" />
+             <button class="rtm-btn-promote" id="ar-save">Add</button>
+             <button class="rtm-icon-btn" id="ar-cancel">✕</button>
+             <div class="rtm-form-error" id="ar-err" style="flex-basis:100%">ต้องมีชื่อ · ถ้ากรอก URL ต้องขึ้นด้วย http(s)://</div>
+           </div>`
+        : `<button class="rtm-add-action-btn" id="btn-add-res">+ เพิ่มลิงก์ (paste URL)</button>`);
+
+      const evItems = ev.length
+        ? ev.map(e => {
+            const meta = EV_META[e.kind];
+            const who = e.by ? escape(userByUid(e.by)?.short_code || "?") : "—";
+            return `
+              <div class="rtm-ev-item">
+                <span class="rtm-ev-icon">${meta.icon}</span>
+                <div class="rtm-ev-body">
+                  <div class="rtm-ev-kind">${escape(meta.label)}${e.title ? " · " + escape(e.title) : ""}${e.week ? " · " + escape(e.week) : ""}</div>
+                  <div class="rtm-ev-text">${linkify(e.text)}</div>
+                </div>
+                <span class="rtm-ev-when">${who} · ${fmtDate(e.at)}</span>
+              </div>`;
+          }).join("")
+        : `<div style="font-size:var(--text-sm);color:var(--ink-tertiary)">ยังไม่มีหลักฐาน — check-in artifact / action output / result ตอนปิด จะโผล่ที่นี่อัตโนมัติ</div>`;
+
+      el.innerHTML = html`
+        <div class="rtm-evidence-section">
+          <h2>📎 Resources / Evidence</h2>
+          <div class="rtm-ev-sub">ใบเสร็จของ verdict — หลักฐานของ project นี้กองที่เดียว กลับมาดูได้</div>
+          <div class="rtm-res-box">
+            <div class="rtm-ev-kind" style="margin-bottom:6px">🔗 ลิงก์ที่เพิ่มเอง (${res.length})</div>
+            ${raw(resItems)}
+            ${raw(addForm)}
+          </div>
+          <div class="rtm-ev-box">
+            <div class="rtm-ev-kind" style="margin-bottom:6px">🧾 Evidence trail (${ev.length}) · auto จาก check-in + action + close</div>
+            ${raw(evItems)}
+          </div>
+        </div>
+      `;
+      wireEvidence(p);
+    };
+
+    const wireEvidence = (p) => {
+      document.querySelector("#btn-add-res")?.addEventListener("click", () => {
+        uiProject.addingResource = true; renderProject(p.id); document.querySelector("#ar-label")?.focus();
+      });
+      document.querySelector("#ar-cancel")?.addEventListener("click", () => { uiProject.addingResource = false; renderProject(p.id); });
+      const save = document.querySelector("#ar-save");
+      if (save) {
+        const labelEl = document.querySelector("#ar-label");
+        const urlEl = document.querySelector("#ar-url");
+        const doAdd = async () => {
+          const label = labelEl.value.trim();
+          const url = urlEl.value.trim();
+          const err = document.querySelector("#ar-err");
+          if (!label || (url && !/^https?:\/\//i.test(url))) { err.classList.add("show"); return; }
+          save.disabled = true;
+          try { await addResource(p.id, { label, url }); uiProject.addingResource = false; renderProject(p.id); }
+          catch (e) { alert("เพิ่มลิงก์ไม่สำเร็จ · " + e.message); save.disabled = false; }
+        };
+        save.addEventListener("click", doAdd);
+        const keyer = (e) => { if (e.key === "Enter") doAdd(); if (e.key === "Escape") { uiProject.addingResource = false; renderProject(p.id); } };
+        labelEl?.addEventListener("keydown", keyer);
+        urlEl?.addEventListener("keydown", keyer);
+      }
+      document.querySelectorAll("[data-del-res]").forEach(b => b.addEventListener("click", async () => {
+        const idx = parseInt(b.dataset.delRes, 10);
+        const r = projectResources(p)[idx];
+        if (!confirm(`ลบลิงก์ "${r?.label || ""}" ?`)) return;
+        try { await removeResource(p.id, idx); }
+        catch (e) { alert("ลบไม่สำเร็จ · " + e.message); }
+      }));
     };
 
     // ===== DATA · checkins =====
@@ -4053,7 +4231,8 @@
       projectById, allLessonTags,
       computeVerdict, verdictBadge, closedProjects, renderClosedCard,
       viewScoreboard, scoreboardStats, ideaFunnel, inPeriod, periodBounds,
-      mountModal, closeModal, closeProject, reopenProject, updateClosedReport };
+      mountModal, closeModal, closeProject, reopenProject, updateClosedReport,
+      projectResources, addResource, removeResource, projectEvidence, renderEvidence, wireEvidence, viewProject, renderProject };
   </script>
 </body>
 </html>
