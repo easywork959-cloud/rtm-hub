@@ -1509,6 +1509,18 @@
       const p = (store.get("projects") || []).find(x => x.id === projectId);
       await updateDoc(doc(db, "projects", projectId), { resources: projectResources(p).filter((_, i) => i !== idx) });
     };
+    const updateResource = async (projectId, idx, { label, url }) => {
+      const p = (store.get("projects") || []).find(x => x.id === projectId);
+      const list = projectResources(p);
+      const cur = list[idx];
+      if (!cur) throw new Error("resource not found");
+      const lb = (label != null ? label : cur.label).trim();
+      if (!lb) throw new Error("label required");
+      const u = (url != null ? url : (cur.url || "")).trim();
+      if (u && !/^https?:\/\//i.test(u)) throw new Error("url must be http(s)://");
+      const next = list.map((r, i) => i === idx ? { ...r, label: lb, url: u || null } : r);
+      await updateDoc(doc(db, "projects", projectId), { resources: next });
+    };
 
     // ===== DATA · milestones =====
     // collectionGroup: 1 listener covers every project's milestones (v1 = 1 tenant)
@@ -1536,6 +1548,18 @@
         closed_at: null,
         template_source: null,
       });
+    };
+
+    const updateMilestone = async (projectId, milestoneId, { title, target_date }) => {
+      const patch = {};
+      if (title != null) patch.title = title.trim();
+      if (target_date !== undefined) patch.target_date = target_date ? new Date(target_date) : null;
+      await updateDoc(doc(db, "projects", projectId, "milestones", milestoneId), patch);
+    };
+    // ลบได้เฉพาะ milestone ที่ไม่มี action (กัน action กำพร้า + ref กำพร้าใน check-in)
+    const deleteMilestone = async (projectId, milestoneId) => {
+      if (actionsOf(projectId, milestoneId).length > 0) throw new Error("milestone ยังมี action — ลบ/ย้าย action ออกก่อน");
+      await deleteDoc(doc(db, "projects", projectId, "milestones", milestoneId));
     };
 
     // Auto-close: milestone = done when it has ≥1 action and all are done.
@@ -1601,6 +1625,16 @@
     const deleteAction = async (projectId, actionId, milestoneId) => {
       await deleteDoc(doc(db, "projects", projectId, "actions", actionId));
       await syncMilestone(projectId, milestoneId);
+    };
+
+    // แก้ title/owner/due ในที่ (แทน delete+re-add · กัน ref กำพร้าใน check-in completed_action_ids + evidence output_text)
+    // status ไม่เปลี่ยน → ไม่ต้อง syncMilestone
+    const updateAction = async (projectId, actionId, { title, owner_uid, due_date }) => {
+      const patch = {};
+      if (title != null) patch.title = title.trim();
+      if (owner_uid != null) patch.owner_uid = owner_uid;
+      if (due_date !== undefined) patch.due_date = due_date ? new Date(due_date) : null;
+      await updateDoc(doc(db, "projects", projectId, "actions", actionId), patch);
     };
 
     // ===== DATA · lessons =====
@@ -2303,7 +2337,8 @@
     };
 
     // ===== VIEW · project =====
-    const uiProject = { open: {}, addingAction: null, addingMilestone: false, addingResource: false };
+    const uiProject = { open: {}, addingAction: null, addingMilestone: false, addingResource: false,
+      editingAction: null, editingMilestone: null, editingResource: null };
 
     const viewProject = (params) => {
       const pid = params.id;
@@ -2311,6 +2346,9 @@
       uiProject.addingAction = null;
       uiProject.addingMilestone = false;
       uiProject.addingResource = false;
+      uiProject.editingAction = null;
+      uiProject.editingMilestone = null;
+      uiProject.editingResource = null;
       const outlet = document.querySelector("#route-outlet");
       outlet.innerHTML = html`<div id="project-root"></div>`;
       const renderAll = () => renderProject(pid);
@@ -2422,21 +2460,35 @@
       const st = acts.some(a => a.blocker_flag) ? "blocker" : milestoneDisplayStatus(acts);
       const doneCount = acts.filter(a => a.status === "done").length;
       const isOpen = uiProject.open[m.id] ?? (st !== "done");
+      const editing = !closed && uiProject.editingMilestone === m.id;
       return html`
         <div class="rtm-mil-block">
-          <div class="rtm-mil-header" data-toggle-mil="${m.id}">
-            <span class="rtm-mil-caret">${isOpen ? "▾" : "▸"}</span>
-            <span class="rtm-mil-icon">${MILESTONE_ICON[st]}</span>
-            <span class="rtm-mil-name">${m.title}</span>
-            <span class="rtm-mil-sub">${doneCount}/${acts.length} · ${m.target_date ? "🎯 " + fmtDate(m.target_date) : "ไม่ตั้งวันที่"}</span>
-          </div>
-          ${isOpen ? raw(renderActionRows(p, m, acts, closed)) : ""}
+          ${editing ? raw(renderEditMilestoneForm(m)) : raw(`
+            <div class="rtm-mil-header" data-toggle-mil="${m.id}">
+              <span class="rtm-mil-caret">${isOpen ? "▾" : "▸"}</span>
+              <span class="rtm-mil-icon">${MILESTONE_ICON[st]}</span>
+              <span class="rtm-mil-name">${escape(m.title)}</span>
+              <span class="rtm-mil-sub">${doneCount}/${acts.length} · ${m.target_date ? "🎯 " + fmtDate(m.target_date) : "ไม่ตั้งวันที่"}</span>
+              ${closed ? "" : `<button class="rtm-icon-btn" data-edit-mil="${m.id}" title="แก้ milestone">✏️</button>
+                               <button class="rtm-icon-btn" data-del-mil="${m.id}" title="ลบ milestone">🗑</button>`}
+            </div>
+          `)}
+          ${(isOpen && !editing) ? raw(renderActionRows(p, m, acts, closed)) : ""}
         </div>
       `;
     };
 
+    const renderEditMilestoneForm = (m) => `
+      <div class="rtm-add-action-form" data-mil-edit="${m.id}">
+        <input type="text" id="me-title" value="${escape(m.title)}" maxlength="80" placeholder="ชื่อ milestone..." />
+        <input type="date" id="me-due" value="${escape(dateInputVal(m.target_date))}" />
+        <button class="rtm-btn-promote" id="me-save" data-mil="${m.id}">บันทึก</button>
+        <button class="rtm-icon-btn" id="me-cancel">✕</button>
+      </div>`;
+
     const renderActionRows = (p, m, acts, closed) => {
       const rows = acts.map(a => {
+        if (!closed && uiProject.editingAction === a.id) return renderEditActionForm(a);
         const owner = userByUid(a.owner_uid);
         const stalled = isStalled(a);
         const d = daysUntil(a.due_date);
@@ -2452,6 +2504,7 @@
             </span>
             <span class="rtm-avatar-sm" style="background:${escape(owner?.color || "#4A4741")};width:18px;height:18px;font-size:10px" title="${escape(owner?.display_name || "?")}">${escape(owner?.short_code || "?")}</span>
             <span class="rtm-action-due" style="color:${overdue ? "var(--danger-fg)" : "var(--ink-tertiary)"}">${dueTxt}</span>
+            ${closed ? "" : `<button class="rtm-icon-btn" data-edit-action="${a.id}" title="แก้ action">✏️</button>`}
             ${closed ? "" : `<button class="rtm-icon-btn" data-block="${a.id}" title="Blocker">${a.blocker_flag ? "🚩" : "⚐"}</button>`}
             ${closed ? "" : `<button class="rtm-icon-btn" data-del-action="${a.id}" data-mil="${m.id}" title="ลบ">🗑</button>`}
           </div>`;
@@ -2460,6 +2513,21 @@
         ? renderAddActionForm(p, m)
         : (closed ? "" : `<button class="rtm-add-action-btn" data-add-action="${m.id}">+ Add action</button>`);
       return `<div class="rtm-action-list">${rows}${addForm}</div>`;
+    };
+
+    const renderEditActionForm = (a) => {
+      const users = store.get("users") || [];
+      return `
+        <div class="rtm-add-action-form" data-act-edit="${a.id}">
+          <input type="text" id="ae-title" value="${escape(a.title)}" maxlength="140" placeholder="ทำอะไร..." />
+          <select id="ae-owner">
+            ${users.map(u => `<option value="${escape(u.uid)}" ${u.uid === a.owner_uid ? "selected" : ""}>${escape(u.short_code || u.display_name)}</option>`).join("")}
+          </select>
+          <input type="date" id="ae-due" value="${escape(dateInputVal(a.due_date))}" />
+          <button class="rtm-btn-promote" id="ae-save" data-act="${a.id}">บันทึก</button>
+          <button class="rtm-icon-btn" id="ae-cancel">✕</button>
+          <div class="rtm-form-error" id="ae-err" style="flex-basis:100%">ต้องมี title + owner</div>
+        </div>`;
     };
 
     const renderAddActionForm = (p, m) => {
@@ -2524,6 +2592,61 @@
         renderProject(p.id);
         document.querySelector("#aa-title")?.focus();
       }));
+
+      // Milestone edit / delete (Step 10.1)
+      document.querySelectorAll("[data-edit-mil]").forEach(b => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        uiProject.editingMilestone = b.dataset.editMil;
+        renderProject(p.id);
+        document.querySelector("#me-title")?.focus();
+      }));
+      document.querySelectorAll("[data-del-mil]").forEach(b => b.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const id = b.dataset.delMil;
+        const mm = milestonesOf(p.id).find(x => x.id === id);
+        const n = actionsOf(p.id, id).length;
+        if (n > 0) { alert(`milestone "${mm?.title || ""}" มี ${n} action — ลบ/ย้าย action ออกก่อน`); return; }
+        if (!confirm(`ลบ milestone "${mm?.title || ""}" ?`)) return;
+        try { await deleteMilestone(p.id, id); }
+        catch (err) { alert("ลบไม่สำเร็จ · " + err.message); }
+      }));
+      const meSave = document.querySelector("#me-save");
+      if (meSave) {
+        const doSave = async () => {
+          const title = document.querySelector("#me-title").value.trim();
+          const due = document.querySelector("#me-due").value;
+          if (!title) return;
+          meSave.disabled = true;
+          try { await updateMilestone(p.id, meSave.dataset.mil, { title, target_date: due || null }); uiProject.editingMilestone = null; renderProject(p.id); }
+          catch (err) { alert("บันทึกไม่สำเร็จ · " + err.message); meSave.disabled = false; }
+        };
+        meSave.addEventListener("click", doSave);
+        document.querySelector("#me-cancel")?.addEventListener("click", () => { uiProject.editingMilestone = null; renderProject(p.id); });
+        document.querySelector("#me-title")?.addEventListener("keydown", (e) => { if (e.key === "Enter") doSave(); if (e.key === "Escape") { uiProject.editingMilestone = null; renderProject(p.id); } });
+      }
+
+      // Action edit (Step 10.1 · แก้ในที่ · กัน ref กำพร้า)
+      document.querySelectorAll("[data-edit-action]").forEach(b => b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        uiProject.editingAction = b.dataset.editAction;
+        renderProject(p.id);
+        document.querySelector("#ae-title")?.focus();
+      }));
+      const aeSave = document.querySelector("#ae-save");
+      if (aeSave) {
+        const doSave = async () => {
+          const title = document.querySelector("#ae-title").value.trim();
+          const owner = document.querySelector("#ae-owner").value;
+          const due = document.querySelector("#ae-due").value;
+          if (!title || !owner) { document.querySelector("#ae-err").classList.add("show"); return; }
+          aeSave.disabled = true;
+          try { await updateAction(p.id, aeSave.dataset.act, { title, owner_uid: owner, due_date: due || null }); uiProject.editingAction = null; renderProject(p.id); }
+          catch (err) { alert("บันทึกไม่สำเร็จ · " + err.message); aeSave.disabled = false; }
+        };
+        aeSave.addEventListener("click", doSave);
+        document.querySelector("#ae-cancel")?.addEventListener("click", () => { uiProject.editingAction = null; renderProject(p.id); });
+        document.querySelector("#ae-title")?.addEventListener("keydown", (e) => { if (e.key === "Enter") doSave(); if (e.key === "Escape") { uiProject.editingAction = null; renderProject(p.id); } });
+      }
 
       wireAddActionForm(p);
     };
@@ -2602,14 +2725,27 @@
       const ev = projectEvidence(p.id);
 
       const resItems = res.length
-        ? res.map((r, i) => `
+        ? res.map((r, i) => {
+            if (!closed && uiProject.editingResource === i) {
+              return `
+                <div class="rtm-add-action-form" style="margin-top:var(--space-2)" data-res-edit="${i}">
+                  <input type="text" id="re-label" value="${escape(r.label)}" maxlength="120" placeholder="ชื่อ/คำอธิบาย (บังคับ)" />
+                  <input type="text" id="re-url" value="${escape(r.url || "")}" placeholder="https://... (ถ้ามี)" />
+                  <button class="rtm-btn-promote" id="re-save" data-idx="${i}">บันทึก</button>
+                  <button class="rtm-icon-btn" id="re-cancel">✕</button>
+                  <div class="rtm-form-error" id="re-err" style="flex-basis:100%">ต้องมีชื่อ · ถ้ากรอก URL ต้องขึ้นด้วย http(s)://</div>
+                </div>`;
+            }
+            return `
             <div class="rtm-res-item">
               <span class="rtm-res-link">${r.url
                 ? `<a href="${escape(r.url)}" target="_blank" rel="noopener"><span class="rtm-res-label">${escape(r.label)}</span> ↗</a>`
                 : `<span class="rtm-res-label">${escape(r.label)}</span>`}</span>
               <span class="rtm-res-meta">${escape(userByUid(r.added_by)?.short_code || "?")} · ${fmtDate(r.added_at)}</span>
+              ${closed ? "" : `<button class="rtm-icon-btn" data-edit-res="${i}" title="แก้ลิงก์">✏️</button>`}
               ${closed ? "" : `<button class="rtm-icon-btn" data-del-res="${i}" title="ลบลิงก์">🗑</button>`}
-            </div>`).join("")
+            </div>`;
+          }).join("")
         : `<div style="font-size:var(--text-sm);color:var(--ink-tertiary)">ยังไม่มีลิงก์ที่เพิ่มเอง</div>`;
 
       const addForm = closed ? "" : (uiProject.addingResource
@@ -2686,6 +2822,24 @@
         try { await removeResource(p.id, idx); }
         catch (e) { alert("ลบไม่สำเร็จ · " + e.message); }
       }));
+      // Resource edit (Step 10.1)
+      document.querySelectorAll("[data-edit-res]").forEach(b => b.addEventListener("click", () => {
+        uiProject.editingResource = parseInt(b.dataset.editRes, 10); renderProject(p.id); document.querySelector("#re-label")?.focus();
+      }));
+      const reSave = document.querySelector("#re-save");
+      if (reSave) {
+        const doSave = async () => {
+          const label = document.querySelector("#re-label").value.trim();
+          const url = document.querySelector("#re-url").value.trim();
+          const err = document.querySelector("#re-err");
+          if (!label || (url && !/^https?:\/\//i.test(url))) { err.classList.add("show"); return; }
+          reSave.disabled = true;
+          try { await updateResource(p.id, parseInt(reSave.dataset.idx, 10), { label, url }); uiProject.editingResource = null; renderProject(p.id); }
+          catch (e) { alert("บันทึกไม่สำเร็จ · " + e.message); reSave.disabled = false; }
+        };
+        reSave.addEventListener("click", doSave);
+        document.querySelector("#re-cancel")?.addEventListener("click", () => { uiProject.editingResource = null; renderProject(p.id); });
+      }
     };
 
     // ===== DATA · checkins =====
@@ -2925,13 +3079,14 @@
           <div class="rtm-q">
             <div class="rtm-q-label">2 · Artifact <span class="rtm-req">*</span></div>
             <div class="rtm-artifact-tabs">
-              <button type="button" class="rtm-pill ${artType !== "text" ? "active" : ""}" data-art-type="link">🔗 ลิงก์ / สกรีนช็อต</button>
+              <button type="button" class="rtm-pill ${artType !== "text" ? "active" : ""}" data-art-type="link">🔗 วางลิงก์ (ไฟล์/รูป)</button>
               <button type="button" class="rtm-pill ${artType === "text" ? "active" : ""}" data-art-type="text">📝 ข้อความ</button>
             </div>
             ${artType === "text"
               ? raw(`<textarea id="ck-artifact" class="rtm-ta" rows="4" placeholder="สรุปสิ่งที่ทำ 3 บรรทัดขึ้นไป...">${escape(artVal)}</textarea>`)
-              : raw(`<input id="ck-artifact" type="url" class="rtm-inp" placeholder="https://... (ลิงก์ไฟล์ / รูป / dashboard)" value="${escape(artVal)}" />`)}
-            <div class="rtm-form-error" id="ck-art-err">ต้องแนบ artifact — link, screenshot, หรือ note 3+ บรรทัด</div>
+              : raw(`<input id="ck-artifact" type="url" class="rtm-inp" placeholder="https://... (ลิงก์ไฟล์ / รูป / dashboard)" value="${escape(artVal)}" />
+                     <div class="rtm-q-hint">รูป/สกรีนช็อต = อัปขึ้น Drive/LINE/Slack แล้ววางลิงก์ · ยังไม่รองรับแนบไฟล์ตรง (Kill List #11)</div>`)}
+            <div class="rtm-form-error" id="ck-art-err">ต้องแนบ artifact — วางลิงก์ (http/https) หรือพิมพ์ note 3+ บรรทัด</div>
           </div>
 
           <div class="rtm-q">
@@ -4232,7 +4387,8 @@
       computeVerdict, verdictBadge, closedProjects, renderClosedCard,
       viewScoreboard, scoreboardStats, ideaFunnel, inPeriod, periodBounds,
       mountModal, closeModal, closeProject, reopenProject, updateClosedReport,
-      projectResources, addResource, removeResource, projectEvidence, renderEvidence, wireEvidence, viewProject, renderProject };
+      projectResources, addResource, removeResource, updateResource, projectEvidence, renderEvidence, wireEvidence, viewProject, renderProject,
+      updateAction, updateMilestone, deleteMilestone, renderEditActionForm, renderEditMilestoneForm };
   </script>
 </body>
 </html>
