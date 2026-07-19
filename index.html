@@ -366,6 +366,223 @@
       font-size: var(--text-xs);
       color: var(--good-fg);
     }
+
+    /* ===== DECIDE VIEW ===== */
+    .rtm-decide-section {
+      margin-bottom: var(--space-6);
+    }
+    .rtm-decide-section-title {
+      font-size: var(--text-lg);
+      font-weight: 600;
+      margin-bottom: var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .rtm-decide-cols {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--space-4);
+    }
+    .rtm-decide-col {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      min-height: 200px;
+    }
+    .rtm-decide-col-header {
+      font-weight: 600;
+      margin-bottom: var(--space-3);
+      padding-bottom: var(--space-2);
+      border-bottom: 2px solid;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .rtm-decide-col-donow .rtm-decide-col-header { border-color: var(--sage); color: var(--good-fg); }
+    .rtm-decide-col-park .rtm-decide-col-header { border-color: var(--peach); color: var(--warn-fg); }
+    .rtm-decide-col-kill .rtm-decide-col-header { border-color: var(--border-strong); color: var(--ink-tertiary); }
+    .rtm-decide-col-count {
+      font-size: var(--text-sm);
+      color: var(--ink-tertiary);
+      font-weight: 400;
+    }
+    .rtm-decide-card {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: var(--space-3);
+      margin-bottom: var(--space-2);
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .rtm-decide-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+    .rtm-decide-card-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+      font-size: var(--text-sm);
+    }
+    .rtm-decide-card-meta {
+      font-size: var(--text-xs);
+      color: var(--ink-tertiary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-2);
+      flex-wrap: wrap;
+    }
+    .rtm-decide-card-pareto {
+      color: var(--good-fg);
+      font-weight: 600;
+    }
+    .rtm-decide-card-park-days {
+      color: var(--warn-fg);
+      font-size: var(--text-xs);
+    }
+    .rtm-decide-card-park-days.warn {
+      color: var(--danger-fg);
+      font-weight: 600;
+    }
+    .rtm-decide-card-kill-reason {
+      font-size: var(--text-xs);
+      color: var(--ink-tertiary);
+      font-style: italic;
+      margin-top: 4px;
+    }
+    .rtm-decide-untriaged {
+      background: var(--peach-soft);
+      border: 1px solid var(--peach);
+      padding: var(--space-4);
+      border-radius: var(--radius-md);
+    }
+    .rtm-decide-untriaged-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: var(--space-2);
+    }
+    .rtm-btn-promote {
+      background: var(--sage);
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-xs);
+      font-weight: 500;
+    }
+    .rtm-btn-promote:hover { background: #6B8B70; }
+    .rtm-decide-card-actions {
+      margin-top: var(--space-2);
+      display: flex;
+      gap: var(--space-1);
+      justify-content: flex-end;
+    }
+
+    /* ===== FORM ===== */
+    .rtm-form-row { margin-bottom: var(--space-3); }
+    .rtm-form-label {
+      display: block;
+      font-size: var(--text-sm);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .rtm-form-label .req { color: var(--danger-fg); }
+    .rtm-form-hint {
+      font-size: var(--text-xs);
+      color: var(--ink-tertiary);
+      margin-top: 2px;
+    }
+    .rtm-form-error {
+      font-size: var(--text-xs);
+      color: var(--danger-fg);
+      margin-top: 4px;
+      display: none;
+    }
+    .rtm-form-error.show { display: block; }
+    .rtm-form-row-inline {
+      display: flex;
+      gap: var(--space-2);
+      align-items: end;
+    }
+    .rtm-form-row-inline > * { flex: 1; }
+    .rtm-modal input[type="number"],
+    .rtm-modal input[type="text"],
+    .rtm-modal select,
+    .rtm-modal textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font: inherit;
+      outline: none;
+      background: var(--bg-elevated);
+    }
+    .rtm-modal input:focus,
+    .rtm-modal select:focus,
+    .rtm-modal textarea:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px var(--sage-soft);
+    }
+    .rtm-modal textarea { resize: vertical; min-height: 60px; }
+    .rtm-pareto-display {
+      padding: var(--space-3);
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+      font-size: var(--text-sm);
+      color: var(--ink-secondary);
+      margin-bottom: var(--space-3);
+    }
+    .rtm-pareto-display b {
+      color: var(--good-fg);
+      font-size: var(--text-base);
+    }
+    .rtm-triage-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+    }
+    .rtm-btn-donow, .rtm-btn-park, .rtm-btn-kill {
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+      border: 1.5px solid;
+      transition: all 0.15s;
+    }
+    .rtm-btn-donow {
+      background: var(--sage-soft);
+      color: var(--good-fg);
+      border-color: var(--sage);
+    }
+    .rtm-btn-donow:hover { background: var(--sage); color: #fff; }
+    .rtm-btn-park {
+      background: var(--peach-soft);
+      color: var(--warn-fg);
+      border-color: var(--peach);
+    }
+    .rtm-btn-park:hover { background: var(--peach); color: #fff; }
+    .rtm-btn-kill {
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+      border-color: var(--border-strong);
+    }
+    .rtm-btn-kill:hover {
+      background: var(--danger-bg);
+      color: var(--danger-fg);
+      border-color: var(--danger-fg);
+    }
+    .rtm-kill-reason {
+      margin-top: var(--space-3);
+      display: none;
+    }
+    .rtm-kill-reason.show { display: block; }
+
+    @media (max-width: 767px) {
+      .rtm-decide-cols { grid-template-columns: 1fr; }
+      .rtm-triage-actions { grid-template-columns: 1fr; }
+    }
     .rtm-session-tag {
       font-size: var(--text-xs);
       color: var(--ink-tertiary);
@@ -752,6 +969,13 @@
       await deleteDoc(doc(db, "ideas", id));
     };
 
+    const updateIdeaStatus = async (id, status, extra = {}) => {
+      const patch = { status, ...extra };
+      if (status === "park") patch.parked_at = serverTimestamp();
+      if (status === "do_now" || status === "new") { patch.parked_at = null; patch.kill_reason = null; }
+      await updateDoc(doc(db, "ideas", id), patch);
+    };
+
     const createIdea = async (title) => {
       const user = store.get("auth").user;
       const active = store.get("activeSession");
@@ -780,6 +1004,71 @@
           });
         } catch(e) { console.warn("session count bump failed:", e); }
       }
+    };
+
+    // ===== DATA · projects =====
+    const subscribeProjects = () => {
+      const q = query(collection(db, "projects"), orderBy("created_at", "desc"));
+      return onSnapshot(q, snap => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        store.set("projects", list);
+      });
+    };
+
+    const promoteIdeaToProject = async (idea, projectData) => {
+      // 1. Create project doc
+      const projectRef = await addDoc(collection(db, "projects"), {
+        title: idea.title,
+        origin_idea_id: idea.id,
+        origin_session_tag: idea.session_tag || null,
+        why: projectData.why || null,
+        deliverable_type: projectData.deliverable_type,
+        kpi_text: projectData.kpi_text,
+        owner_lead_uid: projectData.owner_lead_uid,
+        impact_projected_value: idea.impact_value || null,
+        impact_projected_unit: idea.impact_unit || null,
+        impact_actual_value: null,
+        impact_actual_unit: null,
+        impact_verified_by_uid: null,
+        impact_verified_at: null,
+        status: "active",
+        result_text: null,
+        lesson_learned: null,
+        lesson_tags: [],
+        created_at: serverTimestamp(),
+        closed_at: null,
+        tenant_id: TENANT_ID,
+        dc_id: DC_ID,
+      });
+
+      // 2. Init 3-step milestone template
+      const now = Date.now();
+      const oneWeek = 7 * 24 * 60 * 60 * 1000;
+      const milestones = [
+        { title: "Analysis", template_source: "analysis", offset: oneWeek },
+        { title: "Build", template_source: "build", offset: 2 * oneWeek },
+        { title: "Rollout", template_source: "rollout", offset: 3 * oneWeek },
+      ];
+      for (let i = 0; i < milestones.length; i++) {
+        const m = milestones[i];
+        await addDoc(collection(db, "projects", projectRef.id, "milestones"), {
+          title: m.title,
+          target_date: new Date(now + m.offset),
+          order: i,
+          status: "not_yet",
+          closed_at: null,
+          template_source: m.template_source,
+        });
+      }
+
+      // 3. Update idea → promoted
+      await updateDoc(doc(db, "ideas", idea.id), {
+        status: "promoted",
+        promoted_project_id: projectRef.id,
+      });
+
+      return projectRef.id;
     };
 
     // ===== VIEW · ideas =====
@@ -853,16 +1142,21 @@
         () => store.set("modal", { name: "session-end" }));
     };
 
+    // Idea Wall shows ONLY status=new ideas (untriaged)
+    // Triaged ideas move to Decide view
+    const getNewIdeas = () => (store.get("ideas") || []).filter(i => i.status === "new");
+
     const renderFilterRow = () => {
       const el = document.querySelector("#filter-row");
       if (!el) return;
       const filter = store.get("ideasFilter") || "all";
       const uid = store.get("auth").user?.uid;
-      const all = store.get("ideas") || [];
+      const all = getNewIdeas();
       const mineCount = all.filter(i => i.created_by === uid).length;
       el.innerHTML = html`
         <button class="rtm-pill ${filter === 'all' ? 'active' : ''}" data-filter="all">ทั้งหมด · ${all.length}</button>
         <button class="rtm-pill ${filter === 'mine' ? 'active' : ''}" data-filter="mine">ของฉัน · ${mineCount}</button>
+        <a href="#/decide" class="rtm-pill" style="margin-left:auto;background:var(--sage-soft);color:var(--good-fg);border-color:var(--sage)">🎯 ไป Decide →</a>
       `;
       el.querySelectorAll("[data-filter]").forEach(b => {
         b.addEventListener("click", () => store.set("ideasFilter", b.dataset.filter));
@@ -874,10 +1168,10 @@
       if (!el) return;
       const filter = store.get("ideasFilter") || "all";
       const uid = store.get("auth").user?.uid;
-      const all = store.get("ideas") || [];
+      const all = getNewIdeas();
       const ideas = filter === "mine" ? all.filter(i => i.created_by === uid) : all;
       if (ideas.length === 0) {
-        el.innerHTML = html`<div class="rtm-empty">${filter === "mine" ? "คุณยังไม่มีไอเดีย" : "ยังไม่มีไอเดีย — พิมพ์บรรทัดแรกด้านบน"}</div>`;
+        el.innerHTML = html`<div class="rtm-empty">${filter === "mine" ? "คุณไม่มีไอเดียที่รอ triage" : "ยังไม่มีไอเดีย — พิมพ์บรรทัดแรกด้านบน"}</div>`;
         return;
       }
       el.innerHTML = html`<div class="rtm-idea-grid">${ideas.map(renderIdeaCard)}</div>`;
@@ -952,6 +1246,133 @@
       input.addEventListener("blur", commit);
     };
 
+    // ===== VIEW · decide =====
+    const viewDecide = () => {
+      const outlet = document.querySelector("#route-outlet");
+      outlet.innerHTML = html`
+        <h1>🎯 Decision Board</h1>
+        <p style="color:var(--ink-secondary);margin-top:8px">ประเมิน impact/effort · ตัดสิน Do Now / Park / Kill</p>
+        <div id="decide-content" style="margin-top:24px"></div>
+      `;
+
+      const renderAll = () => renderDecideContent();
+      renderAll();
+
+      const unsubs = [
+        store.subscribe("ideas", renderAll),
+        store.subscribe("users", renderAll),
+      ];
+      return () => unsubs.forEach(u => u());
+    };
+
+    const renderDecideContent = () => {
+      const el = document.querySelector("#decide-content");
+      if (!el) return;
+      const all = store.get("ideas") || [];
+      const untriaged = all.filter(i => i.status === "new");
+      const doNow = all.filter(i => i.status === "do_now").sort((a,b) => (b.pareto_score||0) - (a.pareto_score||0));
+      const park = all.filter(i => i.status === "park").sort((a,b) => (b.pareto_score||0) - (a.pareto_score||0));
+      const kill = all.filter(i => i.status === "kill");
+
+      el.innerHTML = html`
+        ${untriaged.length > 0 ? raw(`
+          <div class="rtm-decide-section">
+            <div class="rtm-decide-section-title">🆕 ยังไม่ตัดสิน · ${untriaged.length}</div>
+            <div class="rtm-decide-untriaged">
+              <div class="rtm-decide-untriaged-grid">
+                ${untriaged.map(renderDecideUntriagedCard).join("")}
+              </div>
+            </div>
+          </div>
+        `) : ""}
+        <div class="rtm-decide-cols">
+          <div class="rtm-decide-col rtm-decide-col-donow">
+            <div class="rtm-decide-col-header">
+              <span>🚀 Do Now</span>
+              <span class="rtm-decide-col-count">${doNow.length}</span>
+            </div>
+            ${doNow.length === 0 ? raw(`<div style="color:var(--ink-tertiary);font-size:var(--text-sm);text-align:center;padding:24px 0">ยังไม่มี</div>`) : raw(doNow.map(renderDecideCard).join(""))}
+          </div>
+          <div class="rtm-decide-col rtm-decide-col-park">
+            <div class="rtm-decide-col-header">
+              <span>⏸ Park</span>
+              <span class="rtm-decide-col-count">${park.length}</span>
+            </div>
+            ${park.length === 0 ? raw(`<div style="color:var(--ink-tertiary);font-size:var(--text-sm);text-align:center;padding:24px 0">ยังไม่มี</div>`) : raw(park.map(renderDecideCard).join(""))}
+          </div>
+          <div class="rtm-decide-col rtm-decide-col-kill">
+            <div class="rtm-decide-col-header">
+              <span>✕ Kill</span>
+              <span class="rtm-decide-col-count">${kill.length}</span>
+            </div>
+            ${kill.length === 0 ? raw(`<div style="color:var(--ink-tertiary);font-size:var(--text-sm);text-align:center;padding:24px 0">ยังไม่มี</div>`) : raw(kill.map(renderDecideCard).join(""))}
+          </div>
+        </div>
+      `;
+
+      // Wire clicks
+      el.querySelectorAll("[data-triage-idea]").forEach(card => {
+        card.addEventListener("click", (e) => {
+          if (e.target.closest("[data-promote]")) return; // let promote button handle
+          const id = card.dataset.triageIdea;
+          store.set("modal", { name: "triage", ideaId: id });
+        });
+      });
+      el.querySelectorAll("[data-promote]").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.promote;
+          store.set("modal", { name: "promote", ideaId: id });
+        });
+      });
+    };
+
+    const renderDecideUntriagedCard = (idea) => {
+      const user = userByUid(idea.created_by);
+      const color = user?.color || "#4A4741";
+      const short = user?.short_code || "?";
+      return html`
+        <div class="rtm-decide-card" data-triage-idea="${idea.id}">
+          <div class="rtm-decide-card-title">${idea.title}</div>
+          <div class="rtm-decide-card-meta">
+            <span><span class="rtm-avatar-sm" style="background:${escape(color)};width:16px;height:16px;font-size:9px">${escape(short)}</span> ${idea.session_tag ? raw(`· 🏷 ${escape(idea.session_tag)}`) : ""}</span>
+            <span style="color:var(--sage);font-weight:500">→ triage</span>
+          </div>
+        </div>
+      `;
+    };
+
+    const renderDecideCard = (idea) => {
+      const user = userByUid(idea.created_by);
+      const color = user?.color || "#4A4741";
+      const short = user?.short_code || "?";
+      const impact = idea.impact_value != null
+        ? `${idea.impact_value} ${idea.impact_unit || ""}`
+        : "—";
+      const effort = idea.effort_person_weeks != null ? `${idea.effort_person_weeks}w` : "—";
+      const pareto = idea.pareto_score != null ? idea.pareto_score.toFixed(1) : "—";
+      const parkDays = idea.parked_at ? Math.floor((Date.now() - (idea.parked_at.toDate ? idea.parked_at.toDate().getTime() : idea.parked_at)) / 86400000) : null;
+
+      return html`
+        <div class="rtm-decide-card" data-triage-idea="${idea.id}">
+          <div class="rtm-decide-card-title">${idea.title}</div>
+          <div class="rtm-decide-card-meta">
+            <span><span class="rtm-avatar-sm" style="background:${escape(color)};width:16px;height:16px;font-size:9px">${escape(short)}</span> Impact: ${impact} · Effort: ${effort}</span>
+            <span class="rtm-decide-card-pareto">${pareto}</span>
+          </div>
+          ${idea.status === "park" && parkDays != null ? raw(`
+            <div class="rtm-decide-card-park-days ${parkDays > 30 ? 'warn' : ''}">Parked ${parkDays} วัน${parkDays > 30 ? ' · แนะนำ kill' : ''}</div>
+          `) : ""}
+          ${idea.status === "kill" && idea.kill_reason ? raw(`<div class="rtm-decide-card-kill-reason">"${escape(idea.kill_reason)}"</div>`) : ""}
+          ${idea.status === "do_now" ? raw(`
+            <div class="rtm-decide-card-actions">
+              <button class="rtm-btn-promote" data-promote="${idea.id}">🚀 Promote</button>
+            </div>
+          `) : ""}
+        </div>
+      `;
+    };
+
     // ===== STUB VIEWS =====
     const stub = name => () => {
       const el = document.querySelector("#route-outlet");
@@ -960,7 +1381,7 @@
     };
 
     route("/ideas",    viewIdeas);
-    route("/decide",   stub("🎯 Decision Board"));
+    route("/decide",   viewDecide);
     route("/live",     stub("🚀 Live Projects"));
     route("/live/:id", p => stub(`🚀 Project ${p.id}`)());
     route("/my",       stub("📅 My Week"));
@@ -1048,6 +1469,135 @@
       `;
     };
 
+    // ===== MODAL · triage =====
+    const IMPACT_UNITS = ["฿/เดือน", "%", "ชั่วโมง/สัปดาห์", "ร้าน", "อื่นๆ"];
+
+    const renderTriageModal = () => {
+      const m = store.get("modal");
+      const idea = (store.get("ideas") || []).find(i => i.id === m.ideaId);
+      if (!idea) return "";
+      const iv = idea.impact_value ?? "";
+      const iu = idea.impact_unit ?? "฿/เดือน";
+      const inote = idea.impact_note ?? "";
+      const ef = idea.effort_person_weeks ?? "";
+
+      return html`
+        <div class="rtm-modal-backdrop" data-close-modal>
+          <div class="rtm-modal" style="max-width:560px" data-modal-inner>
+            <h2>🎯 Triage</h2>
+            <p class="rtm-modal-hint">"${idea.title}"</p>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Impact <span class="req">*</span></label>
+              <div class="rtm-form-row-inline">
+                <input type="number" id="tr-impact" placeholder="เช่น 500000" step="0.01" value="${iv}" />
+                <select id="tr-unit">
+                  ${IMPACT_UNITS.map(u => `<option value="${escape(u)}" ${u === iu ? "selected" : ""}>${escape(u)}</option>`)}
+                </select>
+              </div>
+              <div class="rtm-form-hint">ตัวเลขเท่านั้น · ห้าม "สูง/กลาง/ต่ำ"</div>
+              <div class="rtm-form-error" id="err-impact">กรอกตัวเลข impact</div>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Impact note (optional)</label>
+              <input type="text" id="tr-note" placeholder="เช่น ลด stockout 30%" value="${escape(inote)}" />
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Effort · person-weeks <span class="req">*</span></label>
+              <input type="number" id="tr-effort" placeholder="เช่น 2" step="0.5" min="0.5" value="${ef}" />
+              <div class="rtm-form-error" id="err-effort">กรอกตัวเลข effort</div>
+            </div>
+
+            <div class="rtm-pareto-display">
+              Pareto score: <b id="tr-pareto">—</b>
+              <span style="font-size:var(--text-xs);color:var(--ink-tertiary);margin-left:8px">(impact / effort · สูง = คุ้ม)</span>
+            </div>
+
+            <div class="rtm-kill-reason" id="tr-kill-reason-wrap">
+              <label class="rtm-form-label">เหตุผลที่ Kill <span class="req">*</span></label>
+              <textarea id="tr-kill-reason" placeholder="ทำไมถึงตัดออก" rows="2"></textarea>
+              <div class="rtm-form-error" id="err-kill">กรอกเหตุผล</div>
+            </div>
+
+            <div class="rtm-triage-actions">
+              <button class="rtm-btn-donow" data-action="do_now">🚀 Do Now</button>
+              <button class="rtm-btn-park" data-action="park">⏸ Park</button>
+              <button class="rtm-btn-kill" data-action="kill">✕ Kill</button>
+            </div>
+
+            <div style="text-align:right;margin-top:16px">
+              <button class="btn-secondary" data-close-modal>ยกเลิก</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    // ===== MODAL · promote =====
+    const DELIVERABLE_TYPES = [
+      { v: "dashboard", label: "📊 Dashboard" },
+      { v: "powerbi", label: "📊 Power BI" },
+      { v: "sop", label: "📋 SOP" },
+      { v: "excel", label: "📈 Excel" },
+      { v: "report", label: "📄 Report" },
+    ];
+
+    const renderPromoteModal = () => {
+      const m = store.get("modal");
+      const idea = (store.get("ideas") || []).find(i => i.id === m.ideaId);
+      if (!idea) return "";
+      const users = store.get("users") || [];
+
+      return html`
+        <div class="rtm-modal-backdrop" data-close-modal>
+          <div class="rtm-modal" style="max-width:560px">
+            <h2>🚀 Promote to Project</h2>
+            <p class="rtm-modal-hint">"${idea.title}"</p>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Why (recommended · ไม่บังคับ)</label>
+              <textarea id="pr-why" placeholder="ทำเพราะอะไร" rows="2"></textarea>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Deliverable <span class="req">*</span></label>
+              <select id="pr-deliverable">
+                ${DELIVERABLE_TYPES.map(d => `<option value="${d.v}">${d.label}</option>`)}
+              </select>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">KPI <span class="req">*</span> · ต้องมีตัวเลข</label>
+              <input type="text" id="pr-kpi" placeholder="เช่น ลด stockout 30% ภายใน Q4" />
+              <div class="rtm-form-hint">❌ "ลด stockout" · ✓ "ลด stockout 30%"</div>
+              <div class="rtm-form-error" id="err-kpi">KPI ต้องมีตัวเลข</div>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Owner Lead <span class="req">*</span></label>
+              <select id="pr-owner">
+                <option value="">— เลือก owner —</option>
+                ${users.map(u => `<option value="${escape(u.uid)}">${escape(u.display_name || u.email)} (${escape(u.short_code || "?")})</option>`)}
+              </select>
+              <div class="rtm-form-error" id="err-owner">เลือก owner</div>
+            </div>
+
+            <div style="background:var(--bg-subtle);padding:12px;border-radius:var(--radius-sm);font-size:var(--text-sm);color:var(--ink-secondary);margin-top:16px">
+              📅 Milestones เริ่มต้น: Analysis (+1wk) · Build (+2wk) · Rollout (+3wk)
+              <div style="font-size:var(--text-xs);margin-top:4px">แก้ทีหลังได้ในหน้า Project</div>
+            </div>
+
+            <div class="rtm-modal-actions">
+              <button class="btn-secondary" data-close-modal>ยกเลิก</button>
+              <button class="btn-primary" id="btn-modal-promote">🚀 Launch Project</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
     // ===== MODAL RENDERER =====
     const closeModal = () => store.set("modal", null);
 
@@ -1059,6 +1609,8 @@
       if (m.name === "session-start") content = renderSessionStartModal();
       else if (m.name === "session-end") content = renderSessionEndModal();
       else if (m.name === "session-picker") content = renderSessionPickerModal();
+      else if (m.name === "triage") content = renderTriageModal();
+      else if (m.name === "promote") content = renderPromoteModal();
       root.innerHTML = content;
       wireModalEvents();
     };
@@ -1106,6 +1658,103 @@
         try { await updateIdeaSessionTag(m.ideaId, tag); closeModal(); }
         catch (e) { alert("Error: " + e.message); btn.disabled = false; }
       });
+
+      // ===== TRIAGE WIRE =====
+      const impactEl = document.querySelector("#tr-impact");
+      const effortEl = document.querySelector("#tr-effort");
+      const paretoEl = document.querySelector("#tr-pareto");
+
+      const updatePareto = () => {
+        if (!paretoEl) return;
+        const iv = parseFloat(impactEl.value);
+        const ef = parseFloat(effortEl.value);
+        if (iv > 0 && ef > 0) {
+          paretoEl.textContent = (iv / ef).toFixed(1);
+        } else {
+          paretoEl.textContent = "—";
+        }
+      };
+      impactEl?.addEventListener("input", updatePareto);
+      effortEl?.addEventListener("input", updatePareto);
+      if (impactEl) updatePareto();
+
+      document.querySelectorAll("[data-action]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const action = btn.dataset.action;
+          const iv = parseFloat(impactEl.value);
+          const ef = parseFloat(effortEl.value);
+          const unit = document.querySelector("#tr-unit").value;
+          const note = document.querySelector("#tr-note").value.trim();
+
+          // Validate
+          let ok = true;
+          document.querySelectorAll(".rtm-form-error").forEach(e => e.classList.remove("show"));
+          if (!(iv > 0)) { document.querySelector("#err-impact")?.classList.add("show"); ok = false; }
+          if (!(ef > 0)) { document.querySelector("#err-effort")?.classList.add("show"); ok = false; }
+
+          let killReason = null;
+          if (action === "kill") {
+            const wrap = document.querySelector("#tr-kill-reason-wrap");
+            if (!wrap.classList.contains("show")) {
+              wrap.classList.add("show");
+              document.querySelector("#tr-kill-reason").focus();
+              return; // reveal + wait for another click
+            }
+            killReason = document.querySelector("#tr-kill-reason").value.trim();
+            if (!killReason) { document.querySelector("#err-kill")?.classList.add("show"); ok = false; }
+          }
+          if (!ok) return;
+
+          const pareto = iv / ef;
+          const m = store.get("modal");
+          const extra = {
+            impact_value: iv,
+            impact_unit: unit,
+            impact_note: note || null,
+            effort_person_weeks: ef,
+            pareto_score: pareto,
+          };
+          if (action === "kill") extra.kill_reason = killReason;
+
+          btn.disabled = true;
+          try { await updateIdeaStatus(m.ideaId, action, extra); closeModal(); }
+          catch (e) { alert("Error: " + e.message); btn.disabled = false; }
+        });
+      });
+
+      // ===== PROMOTE WIRE =====
+      document.querySelector("#btn-modal-promote")?.addEventListener("click", async () => {
+        const why = document.querySelector("#pr-why").value.trim();
+        const deliverable = document.querySelector("#pr-deliverable").value;
+        const kpi = document.querySelector("#pr-kpi").value.trim();
+        const owner = document.querySelector("#pr-owner").value;
+
+        let ok = true;
+        document.querySelectorAll(".rtm-form-error").forEach(e => e.classList.remove("show"));
+        if (!/\d/.test(kpi)) { document.querySelector("#err-kpi")?.classList.add("show"); ok = false; }
+        if (!owner) { document.querySelector("#err-owner")?.classList.add("show"); ok = false; }
+        if (!ok) return;
+
+        const m = store.get("modal");
+        const idea = (store.get("ideas") || []).find(i => i.id === m.ideaId);
+        if (!idea) return;
+
+        const btn = document.querySelector("#btn-modal-promote");
+        btn.disabled = true;
+        try {
+          const projectId = await promoteIdeaToProject(idea, {
+            why: why || null,
+            deliverable_type: deliverable,
+            kpi_text: kpi,
+            owner_lead_uid: owner,
+          });
+          closeModal();
+          alert("✓ สร้าง project แล้ว · ไปที่ Live → ดู project");
+        } catch (e) {
+          alert("Error: " + e.message);
+          btn.disabled = false;
+        }
+      });
     };
 
     // ===== BOOT =====
@@ -1123,6 +1772,7 @@
         subscribeActiveSession();
         subscribeAllSessions();
         subscribeIdeas();
+        subscribeProjects();
         store.subscribe("modal", mountModal);
         mountModal();
       }
