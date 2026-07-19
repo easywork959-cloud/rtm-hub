@@ -870,6 +870,7 @@
     .rtm-checkin-actions { display: flex; justify-content: flex-end; gap: var(--space-3); margin-top: var(--space-4); }
     .rtm-form-error#ck-art-err { display: none; margin-top: 6px; }
     .rtm-form-error#ck-art-err.show { display: block; }
+    .rtm-blocker-note { color: var(--danger-fg); font-size: var(--text-xs); }
   </style>
 </head>
 <body>
@@ -2015,7 +2016,7 @@
           <div class="rtm-action-row ${a.status === "done" ? "done" : ""}">
             <button class="rtm-action-check" data-cycle="${a.id}" data-mil="${m.id}" ${closed ? "disabled" : ""} title="เปลี่ยนสถานะ">${box}</button>
             <span class="rtm-action-title">${escape(a.title)}
-              ${a.blocker_flag ? `<span class="rtm-badge rtm-badge-blocker">🚩</span>` : ""}
+              ${a.blocker_flag ? `<span class="rtm-badge rtm-badge-blocker">🚩</span>${a.blocker_note ? ` <span class="rtm-blocker-note">${escape(a.blocker_note)}</span>` : ""}` : ""}
               ${stalled ? `<span class="rtm-badge rtm-badge-stalled">⏱ stalled</span>` : ""}
             </span>
             <span class="rtm-avatar-sm" style="background:${escape(owner?.color || "#4A4741")};width:18px;height:18px;font-size:10px" title="${escape(owner?.display_name || "?")}">${escape(owner?.short_code || "?")}</span>
@@ -2281,7 +2282,7 @@
           <button class="rtm-action-check" data-my-cycle="${escape(a.id)}" data-proj="${escape(a.project_id)}" data-mil="${escape(a.milestone_id || "")}" title="เปลี่ยนสถานะ">${box}</button>
           <span class="rtm-action-title">${escape(a.title)}
             <a class="rtm-my-projlink" href="#/live/${escape(a.project_id)}">${escape(projTitle(a.project_id))}</a>
-            ${a.blocker_flag ? `<span class="rtm-badge rtm-badge-blocker">🚩</span>` : ""}
+            ${a.blocker_flag ? `<span class="rtm-badge rtm-badge-blocker">🚩</span>${a.blocker_note ? ` <span class="rtm-blocker-note">${escape(a.blocker_note)}</span>` : ""}` : ""}
             ${stalled ? `<span class="rtm-badge rtm-badge-stalled">⏱ stalled</span>` : ""}
           </span>
           <span class="rtm-avatar-sm" style="background:${escape(owner?.color || "#4A4741")};width:18px;height:18px;font-size:10px" title="${escape(owner?.display_name || "?")}">${escape(owner?.short_code || "?")}</span>
