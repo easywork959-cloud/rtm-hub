@@ -900,6 +900,20 @@
     .rtm-alert-sub { display: flex; gap: var(--space-3); flex-wrap: wrap; font-size: var(--text-xs); color: var(--ink-secondary); margin-bottom: var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); }
     .rtm-hl-row { display: flex; gap: var(--space-6); flex-wrap: wrap; font-size: var(--text-base); }
     .rtm-hl-num { font-weight: 600; font-size: var(--text-lg); }
+    .rtm-ci-cell { background: none; border: none; cursor: pointer; font: inherit; padding: 2px 8px; border-radius: var(--radius-sm); }
+    .rtm-ci-cell:hover { background: var(--bg-elevated); box-shadow: 0 0 0 1.5px var(--sage) inset; }
+    .rtm-team-ci { margin-top: var(--space-4); background: var(--bg-elevated); border: 1px solid var(--border); border-left: 3px solid var(--sage); border-radius: var(--radius-md); padding: var(--space-4) var(--space-5); position: relative; }
+    .rtm-ci-close { position: absolute; top: var(--space-3); right: var(--space-3); background: none; border: none; cursor: pointer; color: var(--ink-tertiary); font-size: var(--text-base); line-height: 1; }
+    .rtm-ci-close:hover { color: var(--ink-primary); }
+    .rtm-ci-head { font-size: var(--text-sm); color: var(--ink-secondary); margin-bottom: var(--space-3); }
+    .rtm-ci-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-4); }
+    .rtm-ci-label { font-size: var(--text-xs); color: var(--ink-tertiary); font-weight: 600; margin-bottom: 4px; }
+    .rtm-ci-grid ul { margin: 0; padding-left: var(--space-4); font-size: var(--text-sm); }
+    .rtm-ci-grid a { color: var(--good-fg); word-break: break-all; font-size: var(--text-sm); }
+    .rtm-ci-muted { color: var(--ink-tertiary); font-size: var(--text-sm); }
+    .rtm-ci-text { font-size: var(--text-sm); white-space: pre-line; }
+    .rtm-ci-blocker { margin-top: var(--space-3); color: var(--danger-fg); font-size: var(--text-sm); background: var(--terra-soft); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); }
+    .rtm-ci-empty { color: var(--ink-secondary); font-size: var(--text-sm); }
   </style>
 </head>
 <body>
@@ -1277,7 +1291,7 @@
     const promoteIdeaToProject = async (idea, projectData) => {
       // 1. Create project doc
       const projectRef = await addDoc(collection(db, "projects"), {
-        title: idea.title,
+        title: (projectData.title || idea.title).trim(),
         origin_idea_id: idea.id,
         origin_session_tag: idea.session_tag || null,
         why: projectData.why || null,
@@ -2515,8 +2529,10 @@
     const activeActionsOf = (pid, uid) =>
       (store.get("allActions") || []).filter(a =>
         a.project_id === pid && a.owner_uid === uid && a.status !== "done");
+    const uiTeam = { openCheckin: null };   // uid ที่กางอ่าน check-in อยู่
 
     const viewTeam = () => {
+      uiTeam.openCheckin = null;
       const outlet = document.querySelector("#route-outlet");
       outlet.innerHTML = html`
         <div class="rtm-team-head">
@@ -2524,9 +2540,10 @@
           <span class="rtm-team-week">${weekLabel()} · ${isoWeekStr()}</span>
         </div>
         <div id="team-matrix"></div>
+        <div id="team-checkin"></div>
         <div id="team-alerts"></div>
         <div id="team-hl"></div>`;
-      const renderAll = () => { renderTeamMatrix(); renderTeamAlerts(); renderTeamHighlights(); };
+      const renderAll = () => { renderTeamMatrix(); renderTeamCheckin(); renderTeamAlerts(); renderTeamHighlights(); };
       renderAll();
       const unsubs = [
         store.subscribe("projects", renderAll),
@@ -2586,10 +2603,14 @@
         activeIds.has(a.project_id) && a.owner_uid === m.uid && a.status !== "done");
       const footTotal = members.map(m => `<td>${memberActive(m).length}</td>`).join("");
       const footDoing = members.map(m => `<td>${memberActive(m).filter(a => a.status === "doing").length}</td>`).join("");
+      const footDone = members.map(m => `<td>${myDoneThisWeek(m.uid).length}</td>`).join("");   // velocity รายคน (§7) · all projects
       const footBlock = members.map(m => { const n = memberActive(m).filter(a => a.blocker_flag).length; return `<td>${n ? n + " 🚩" : "0"}</td>`; }).join("");
-      const footCheck = members.map(m => checkinFor(m.uid, week)
-        ? `<td><span class="rtm-alert-good" title="ส่งแล้ว">✅</span></td>`
-        : `<td><span title="ยังไม่ส่ง">⏳</span></td>`).join("");
+      const footCheck = members.map(m => {
+        const has = checkinFor(m.uid, week);
+        const icon = has ? `<span class="rtm-alert-good">✅</span>` : `<span>⏳</span>`;
+        return `<td><button class="rtm-ci-cell" data-ci-uid="${escape(m.uid)}" title="ดู check-in">${icon}</button></td>`;
+      }).join("");
+      const teamDoneWk = (store.get("allActions") || []).filter(a => a.status === "done" && inThisWeek(a.done_at)).length;
 
       el.innerHTML = html`${raw(`
         <div class="rtm-team-scroll">
@@ -2601,6 +2622,7 @@
             <tfoot>
               <tr><th>Active actions</th>${footTotal}<td class="rtm-tm-total">—</td></tr>
               <tr><th>Doing</th>${footDoing}<td>—</td></tr>
+              <tr><th>เสร็จสัปดาห์นี้</th>${footDone}<td class="rtm-tm-total">${teamDoneWk}</td></tr>
               <tr><th>Blocker</th>${footBlock}<td>—</td></tr>
               <tr><th>Check-in ${escape(week)}</th>${footCheck}<td>—</td></tr>
             </tfoot>
@@ -2608,6 +2630,48 @@
         </div>`)}`;
       el.querySelectorAll("[data-open]").forEach(th =>
         th.addEventListener("click", () => go("/live/" + th.dataset.open)));
+      el.querySelectorAll("[data-ci-uid]").forEach(b =>
+        b.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const uid = b.dataset.ciUid;
+          uiTeam.openCheckin = uiTeam.openCheckin === uid ? null : uid;   // toggle
+          renderTeamCheckin();
+        }));
+    };
+
+    // check-in อ่านเนื้อได้ (H feedback v0.7.2) — คลิก ✅/⏳ ในแถว Check-in → กางอ่าน
+    const renderTeamCheckin = () => {
+      const el = document.querySelector("#team-checkin");
+      if (!el) return;
+      const uid = uiTeam.openCheckin;
+      if (!uid) { el.innerHTML = ""; return; }
+      const m = userByUid(uid);
+      const week = isoWeekStr();
+      const ck = checkinFor(uid, week);
+      const titleOf = id => (store.get("allActions") || []).find(a => a.id === id)?.title || "(action ถูกลบ)";
+      let inner;
+      if (!ck) {
+        inner = `<div class="rtm-ci-empty">⏳ <b>${escape(m?.display_name || m?.short_code || "?")}</b> ยังไม่ส่ง check-in สัปดาห์นี้</div>`;
+      } else {
+        const art = ck.artifact || {};
+        const artHtml = /^(https?:\/\/|www\.)/i.test(art.value || "")
+          ? `<a href="${escape(art.value)}" target="_blank" rel="noopener">${escape(art.value)}</a>`
+          : `<span class="rtm-ci-text">${escape(art.value || "—")}</span>`;
+        const listOf = ids => (ids && ids.length)
+          ? `<ul>${ids.map(id => `<li>${escape(titleOf(id))}</li>`).join("")}</ul>`
+          : `<div class="rtm-ci-muted">—</div>`;
+        const blocker = ck.blocker_note
+          ? `<div class="rtm-ci-blocker">🚩 Blocker: ${escape(ck.blocker_note)}</div>` : "";
+        inner = `
+          <div class="rtm-ci-head"><b>${escape(m?.display_name || m?.short_code || "?")}</b> · ส่งเมื่อ ${escape(fmtRelTime(ck.submitted_at))}</div>
+          <div class="rtm-ci-grid">
+            <div><div class="rtm-ci-label">📎 Artifact</div>${artHtml}</div>
+            <div><div class="rtm-ci-label">✅ เสร็จสัปดาห์นี้</div>${listOf(ck.completed_action_ids)}</div>
+            <div><div class="rtm-ci-label">➡ สัปดาห์หน้า</div>${listOf(ck.next_week_action_ids)}</div>
+          </div>${blocker}`;
+      }
+      el.innerHTML = html`${raw(`<div class="rtm-team-ci"><button class="rtm-ci-close" data-ci-close title="ปิด">✕</button>${inner}</div>`)}`;
+      el.querySelector("[data-ci-close]")?.addEventListener("click", () => { uiTeam.openCheckin = null; renderTeamCheckin(); });
     };
 
     const renderTeamAlerts = () => {
@@ -2650,26 +2714,36 @@
         return `<div class="rtm-alert-row">${icon} <span>${escape(short(a.owner_uid))}: “${escape(mainTxt)}”${suffix}</span> <a href="#/live/${escape(a.project_id)}">${escape(projTitle(a.project_id))} →</a></div>`;
       });
 
+      // check-in blocker (Q4) → เข้า alerts ด้วย (H feedback) — คนเขียนว่าตัวเองติดอะไร = signal สูง → ไว้บนสุด
+      const ciBlockers = members
+        .map(m => ({ m, ck: checkinFor(m.uid, week) }))
+        .filter(x => x.ck && x.ck.blocker_note);
+      const ciRows = ciBlockers.map(x =>
+        `<div class="rtm-alert-row">🚩 <span>${escape(x.m.short_code || "?")}: “${escape(x.ck.blocker_note)}” <span class="rtm-alert-warn">(จาก check-in)</span></span></div>`);
+
       // missing check-in — เฉพาะ due window (ศ–อา) เพื่อไม่ให้ noise กลางสัปดาห์ (Principle #3 = passive)
       const day = new Date().getDay();
       const dueWindow = day === 5 || day === 6 || day === 0;
       const missing = dueWindow ? members.filter(m => !checkinFor(m.uid, week)) : [];
-      missing.forEach(m =>
-        rows.push(`<div class="rtm-alert-row">⏱ <span>${escape(m.short_code || "?")}: check-in ยังไม่ส่ง</span></div>`));
+      const missRows = missing.map(m =>
+        `<div class="rtm-alert-row">⏱ <span>${escape(m.short_code || "?")}: check-in ยังไม่ส่ง</span></div>`);
+
+      const allRows = [...ciRows, ...rows, ...missRows];
 
       // summary subline — quick scan ว่ามีกี่อันแต่ละแบบ
       const cnt = { blocker: 0, overdue: 0, stalled: 0, dueSoon: 0 };
       issues.forEach(x => { if (x.blocker) cnt.blocker++; if (x.overdue) cnt.overdue++; if (x.stalled) cnt.stalled++; if (x.dueSoon && !x.overdue) cnt.dueSoon++; });
       const subParts = [];
       if (cnt.blocker) subParts.push(`🚩 ${cnt.blocker} blocker`);
+      if (ciBlockers.length) subParts.push(`🚩 ${ciBlockers.length} check-in blocker`);
       if (cnt.overdue) subParts.push(`<span class="rtm-alert-danger">⚠ ${cnt.overdue} overdue</span>`);
       if (cnt.stalled) subParts.push(`⏱ ${cnt.stalled} stalled`);
       if (cnt.dueSoon) subParts.push(`🕒 ${cnt.dueSoon} due ≤3 วัน`);
       if (missing.length) subParts.push(`⏱ ${missing.length} ยังไม่ check-in`);
       const sub = subParts.length ? `<div class="rtm-alert-sub">${subParts.join(" · ")}</div>` : "";
 
-      const body = rows.length
-        ? rows.join("")
+      const body = allRows.length
+        ? allRows.join("")
         : `<div class="rtm-alert-row"><span class="rtm-alert-good">✅ ทีมไม่มี alert · ทุกอย่าง on-track</span></div>`;
       el.innerHTML = html`${raw(`
         <div class="rtm-team-alerts">
@@ -2879,7 +2953,14 @@
         <div class="rtm-modal-backdrop" data-close-modal>
           <div class="rtm-modal" style="max-width:560px">
             <h2>🚀 Promote to Project</h2>
-            <p class="rtm-modal-hint">"${idea.title}"</p>
+            <p class="rtm-modal-hint">จาก idea: "${idea.title}"</p>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">ชื่อ Project <span class="req">*</span></label>
+              <input type="text" id="pr-name" maxlength="120" value="${escape(idea.title)}" placeholder="ตั้งชื่อให้อ่านรู้เรื่อง" />
+              <div class="rtm-form-hint">แก้ให้สื่อความ · idea ดิบมักตั้งชื่ออ่านยาก</div>
+              <div class="rtm-form-error" id="err-name">ใส่ชื่อ project</div>
+            </div>
 
             <div class="rtm-form-row">
               <label class="rtm-form-label">Why (recommended · ไม่บังคับ)</label>
@@ -3156,6 +3237,7 @@
 
       // ===== PROMOTE WIRE =====
       document.querySelector("#btn-modal-promote")?.addEventListener("click", async () => {
+        const name = document.querySelector("#pr-name").value.trim();
         const why = document.querySelector("#pr-why").value.trim();
         const deliverable = document.querySelector("#pr-deliverable").value;
         const kpi = document.querySelector("#pr-kpi").value.trim();
@@ -3163,6 +3245,7 @@
 
         let ok = true;
         document.querySelectorAll(".rtm-form-error").forEach(e => e.classList.remove("show"));
+        if (!name) { document.querySelector("#err-name")?.classList.add("show"); ok = false; }
         if (!/\d/.test(kpi)) { document.querySelector("#err-kpi")?.classList.add("show"); ok = false; }
         if (!owner) { document.querySelector("#err-owner")?.classList.add("show"); ok = false; }
         if (!ok) return;
@@ -3175,6 +3258,7 @@
         btn.disabled = true;
         try {
           const projectId = await promoteIdeaToProject(idea, {
+            title: name,
             why: why || null,
             deliverable_type: deliverable,
             kpi_text: kpi,
@@ -3305,8 +3389,9 @@
 
     // Debug
     window.__RTM = { store, go, state, auth, db,
-      viewTeam, teamMembers, activeActionsOf, checkinFor, isoWeekStr,
-      renderTeamMatrix, renderTeamAlerts, renderTeamHighlights };
+      viewTeam, teamMembers, activeActionsOf, checkinFor, isoWeekStr, uiTeam,
+      renderTeamMatrix, renderTeamAlerts, renderTeamHighlights, renderTeamCheckin,
+      renderPromoteModal };
   </script>
 </body>
 </html>
