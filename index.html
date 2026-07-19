@@ -241,8 +241,8 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const TENANT_ID = "rtm-bkk-central";
-    const DC_ID = "bkk-central";
+    const TENANT_ID = "rtm-tha";
+    const DC_ID = "tha";
 
     // ===== ALLOWLIST =====
     // ตรงกับ firestore.rules (ห้ามลืม sync)
@@ -332,7 +332,7 @@
         <div class="auth-gate">
           <div class="auth-card">
             <h1>RTM Hub</h1>
-            <p>Execution tool สำหรับทีม RTM · bkk-central</p>
+            <p>Execution tool สำหรับทีม RTM · THA</p>
             ${raw(blocked ? `
               <div class="auth-error">
                 Email <b>${escape(blockedEmail)}</b> ไม่มีสิทธิ์เข้าใช้<br />
@@ -393,7 +393,7 @@
       document.querySelector("#app").innerHTML = html`
         <div class="app-shell">
           <aside class="sidebar">
-            <div class="brand">RTM Hub<small>bkk-central</small></div>
+            <div class="brand">RTM Hub<small>THA</small></div>
             <nav>
               ${NAV.map(n => `<a href="${n.href}" class="${currentPath.startsWith(n.href) ? "active" : ""}">${n.icon} ${n.label}</a>`)}
             </nav>
@@ -422,7 +422,7 @@
     // ===== STUB VIEWS (Step 2+ replace) =====
     const stub = name => () => {
       const el = document.querySelector("#route-outlet");
-      if (el) el.innerHTML = `<h1>${name}</h1><p style="color:var(--ink-tertiary)">TODO · build ตาม 05_BUILD_ORDER.md</p>`;
+      if (el) el.innerHTML = `<h1>${name}</h1><p style="color:var(--ink-tertiary);margin-top:16px">กำลังพัฒนา</p>`;
       return () => {};
     };
 
