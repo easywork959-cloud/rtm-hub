@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <style>
-    /* ===== TOKENS (from 02_DESIGN_SYSTEM.md) ===== */
+    /* ===== TOKENS ===== */
     :root {
       --bg-primary: #FAF7F2;
       --bg-elevated: #FFFFFF;
@@ -131,7 +131,7 @@
       max-width: 1280px;
     }
 
-    /* ===== AVATAR DOT ===== */
+    /* ===== AVATAR ===== */
     .rtm-avatar {
       width: 28px; height: 28px;
       border-radius: 999px;
@@ -140,6 +140,17 @@
       justify-content: center;
       color: #fff;
       font-size: var(--text-sm);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .rtm-avatar-sm {
+      width: 22px; height: 22px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 11px;
       font-weight: 600;
       flex-shrink: 0;
     }
@@ -175,6 +186,7 @@
       font-weight: 500;
     }
     .btn-primary:hover { background: #6B8B70; }
+    .btn-primary:disabled { background: var(--ink-tertiary); cursor: not-allowed; }
     .btn-secondary {
       background: transparent;
       border: 1.5px solid var(--border-strong);
@@ -188,6 +200,195 @@
       font-size: var(--text-sm);
       margin-top: var(--space-4);
     }
+
+    /* ===== IDEA WALL ===== */
+    .rtm-session-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      margin: var(--space-4) 0;
+      border: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .rtm-session-active {
+      background: var(--sage-soft);
+      border-color: var(--sage);
+    }
+    .rtm-session-idle {
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+    }
+    .rtm-session-dot {
+      width: 8px; height: 8px;
+      border-radius: 999px;
+      background: var(--sage);
+      box-shadow: 0 0 0 3px rgba(122,155,126,0.2);
+      animation: rtm-pulse 2s infinite;
+    }
+    @keyframes rtm-pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .rtm-session-count {
+      color: var(--ink-secondary);
+      font-size: var(--text-sm);
+      margin-left: auto;
+      margin-right: var(--space-2);
+    }
+    .rtm-btn-inline {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      color: var(--ink-primary);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-sm);
+    }
+    .rtm-btn-inline:hover { background: var(--bg-primary); }
+
+    .rtm-quick-add {
+      margin: var(--space-4) 0 var(--space-2);
+    }
+    .rtm-quick-add input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      font: inherit;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .rtm-quick-add input:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px var(--sage-soft);
+    }
+    .rtm-quick-add input:disabled { opacity: 0.5; }
+
+    .rtm-filter-row {
+      display: flex;
+      gap: var(--space-2);
+      margin: var(--space-4) 0;
+    }
+    .rtm-pill {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--ink-secondary);
+      font-size: var(--text-sm);
+    }
+    .rtm-pill:hover { background: var(--bg-subtle); }
+    .rtm-pill.active {
+      background: var(--ink-primary);
+      color: var(--bg-primary);
+      border-color: var(--ink-primary);
+    }
+
+    .rtm-idea-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--space-3);
+    }
+    .rtm-idea-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-left-width: 3px;
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(44,42,38,.04));
+      transition: box-shadow 0.15s, transform 0.15s;
+    }
+    .rtm-idea-card:hover {
+      box-shadow: 0 2px 8px rgba(44,42,38,.08);
+      transform: translateY(-1px);
+    }
+    .rtm-idea-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      margin-bottom: var(--space-2);
+      flex-wrap: wrap;
+    }
+    .rtm-session-tag {
+      font-size: var(--text-xs);
+      color: var(--ink-tertiary);
+      padding: 2px 8px;
+      background: var(--bg-subtle);
+      border-radius: 999px;
+    }
+    .rtm-idea-title {
+      font-size: var(--text-base);
+      color: var(--ink-primary);
+      line-height: 1.4;
+    }
+    .rtm-idea-time {
+      font-size: var(--text-xs);
+      color: var(--ink-tertiary);
+      margin-top: var(--space-2);
+    }
+
+    .rtm-empty {
+      text-align: center;
+      padding: var(--space-8) var(--space-4);
+      color: var(--ink-tertiary);
+      background: var(--bg-elevated);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    /* ===== MODAL ===== */
+    .rtm-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(44,42,38,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-4);
+      z-index: 200;
+    }
+    .rtm-modal {
+      background: var(--bg-elevated);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 8px 24px rgba(44,42,38,.15);
+    }
+    .rtm-modal h2 { margin-bottom: var(--space-3); }
+    .rtm-modal-hint {
+      color: var(--ink-secondary);
+      font-size: var(--text-sm);
+      margin: 0 0 var(--space-4);
+    }
+    .rtm-modal input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font: inherit;
+      outline: none;
+    }
+    .rtm-modal input:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px var(--sage-soft);
+    }
+    .rtm-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+    }
+    .rtm-summary {
+      background: var(--bg-subtle);
+      padding: var(--space-4);
+      border-radius: var(--radius-md);
+      margin: var(--space-2) 0 var(--space-4);
+      font-size: var(--text-sm);
+    }
+    .rtm-summary > div { margin: 2px 0; }
 
     /* ===== MOBILE ===== */
     @media (max-width: 767px) {
@@ -205,6 +406,7 @@
       .sidebar nav { display: flex; width: 100%; justify-content: space-around; }
       .sidebar nav a { margin: 0; padding: var(--space-2); text-align: center; font-size: var(--text-xs); }
       .main { padding: var(--space-4); padding-bottom: 80px; }
+      .rtm-idea-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -226,7 +428,7 @@
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs,
-      onSnapshot, query, where, orderBy, limit, serverTimestamp
+      onSnapshot, query, where, orderBy, limit, serverTimestamp, increment
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -245,7 +447,6 @@
     const DC_ID = "tha";
 
     // ===== ALLOWLIST =====
-    // ตรงกับ firestore.rules (ห้ามลืม sync)
     const ALLOWLIST = new Set([
       "pojaman.j@gmail.com",
       "thapanik.p@gmail.com",
@@ -253,7 +454,7 @@
       "easkwork959@gmail.com",
     ]);
 
-    // ===== HTML TEMPLATE + ESCAPE =====
+    // ===== HELPERS =====
     const escape = s => String(s ?? "").replace(/[&<>"']/g,
       c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 
@@ -267,16 +468,26 @@
 
     const raw = s => ({ __raw: s });
 
+    const fmtRelTime = (ts) => {
+      if (!ts) return "";
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      const diff = (Date.now() - d.getTime()) / 1000;
+      if (diff < 60) return "เมื่อกี้";
+      if (diff < 3600) return `${Math.floor(diff/60)} นาทีที่แล้ว`;
+      if (diff < 86400) return `${Math.floor(diff/3600)} ชม.ที่แล้ว`;
+      return `${Math.floor(diff/86400)} วันที่แล้ว`;
+    };
+
     // ===== STORE =====
     const state = {
-      auth: { user: null, ready: false, blocked: false },
+      auth: { user: null, profile: null, ready: false, blocked: false },
       route: { path: "/ideas", params: {} },
       ideas: [], projects: [], users: [], activeSession: null,
       currentProject: null, myActions: [], lessons: [],
       modal: null, toasts: [],
+      ideasFilter: "all",
     };
     const subs = new Map();
-
     const store = {
       get: key => state[key],
       set(key, value) {
@@ -288,13 +499,11 @@
         subs.get(key).add(fn);
         return () => subs.get(key).delete(fn);
       },
-      _debug: () => ({ ...state }),
     };
 
     // ===== ROUTER =====
     const routes = [];
     let currentCleanup = null;
-
     const route = (pattern, view) => routes.push({ pattern, view });
 
     const matchRoute = hash => {
@@ -342,32 +551,24 @@
                 <button id="btn-signout" class="btn-secondary">ออกจากระบบ</button>
               </div>
             ` : `
-              <button id="btn-signin" class="btn-primary">
-                เข้าสู่ระบบด้วย Google
-              </button>
+              <button id="btn-signin" class="btn-primary">เข้าสู่ระบบด้วย Google</button>
             `)}
           </div>
         </div>
       `;
-      const signIn = document.querySelector("#btn-signin");
-      const signOutBtn = document.querySelector("#btn-signout");
-      if (signIn) signIn.addEventListener("click", handleSignIn);
-      if (signOutBtn) signOutBtn.addEventListener("click", handleSignOut);
+      document.querySelector("#btn-signin")?.addEventListener("click", handleSignIn);
+      document.querySelector("#btn-signout")?.addEventListener("click", handleSignOut);
     };
 
     const handleSignIn = async () => {
       try {
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
+        await signInWithPopup(auth, new GoogleAuthProvider());
       } catch (e) {
         console.error("sign-in failed:", e);
         alert("Sign in ล้มเหลว · " + e.message);
       }
     };
-
-    const handleSignOut = async () => {
-      await signOut(auth);
-    };
+    const handleSignOut = () => signOut(auth);
 
     // ===== SHELL =====
     const NAV = [
@@ -384,7 +585,6 @@
       const currentPath = "#" + store.get("route").path;
       const u = store.get("auth").user || {};
       const profile = store.get("auth").profile || {};
-
       const avatarBg = profile.color || "var(--ink-dot)";
       const shortCode = profile.short_code || (u.email || "?")[0].toUpperCase();
       const displayName = profile.display_name || u.displayName || u.email || "";
@@ -412,21 +612,225 @@
         </div>
       `;
       document.querySelector("#btn-signout-shell")?.addEventListener("click", handleSignOut);
-
       if (!shellSubscribed) {
         shellSubscribed = true;
         store.subscribe("route", () => mountShell());
       }
     };
 
-    // ===== STUB VIEWS (Step 2+ replace) =====
+    // ===== DATA · users =====
+    const loadUserProfile = async (uid) => {
+      try {
+        const snap = await getDoc(doc(db, "users", uid));
+        return snap.exists() ? snap.data() : null;
+      } catch (e) { console.error("loadUserProfile:", e); return null; }
+    };
+
+    const subscribeUsers = () => {
+      return onSnapshot(collection(db, "users"), snap => {
+        const list = [];
+        snap.forEach(d => list.push({ uid: d.id, ...d.data() }));
+        store.set("users", list);
+      });
+    };
+
+    const userByUid = (uid) =>
+      (store.get("users") || []).find(u => u.uid === uid);
+
+    // ===== DATA · sessions =====
+    const subscribeActiveSession = () => {
+      const q = query(collection(db, "sessions"), where("ended_at", "==", null), limit(1));
+      return onSnapshot(q, snap => {
+        if (snap.empty) { store.set("activeSession", null); return; }
+        const d = snap.docs[0];
+        store.set("activeSession", { id: d.id, ...d.data() });
+      });
+    };
+
+    const startSession = async (name) => {
+      const user = store.get("auth").user;
+      await addDoc(collection(db, "sessions"), {
+        name: name.trim(),
+        started_at: serverTimestamp(),
+        ended_at: null,
+        started_by_uid: user.uid,
+        idea_count: 0,
+        tenant_id: TENANT_ID,
+        dc_id: DC_ID,
+      });
+    };
+
+    const endSession = async (sessionId) => {
+      await updateDoc(doc(db, "sessions", sessionId), {
+        ended_at: serverTimestamp(),
+      });
+    };
+
+    // ===== DATA · ideas =====
+    const subscribeIdeas = () => {
+      const q = query(collection(db, "ideas"), orderBy("created_at", "desc"));
+      return onSnapshot(q, snap => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        store.set("ideas", list);
+      });
+    };
+
+    const createIdea = async (title) => {
+      const user = store.get("auth").user;
+      const active = store.get("activeSession");
+      await addDoc(collection(db, "ideas"), {
+        title: title.trim(),
+        problem_solved: "",
+        session_tag: active ? active.name : null,
+        status: "new",
+        impact_value: null,
+        impact_unit: null,
+        impact_note: null,
+        effort_person_weeks: null,
+        pareto_score: null,
+        kill_reason: null,
+        promoted_project_id: null,
+        created_by: user.uid,
+        created_at: serverTimestamp(),
+        parked_at: null,
+        tenant_id: TENANT_ID,
+        dc_id: DC_ID,
+      });
+      if (active) {
+        try {
+          await updateDoc(doc(db, "sessions", active.id), {
+            idea_count: increment(1),
+          });
+        } catch(e) { console.warn("session count bump failed:", e); }
+      }
+    };
+
+    // ===== VIEW · ideas =====
+    const viewIdeas = () => {
+      const outlet = document.querySelector("#route-outlet");
+      outlet.innerHTML = html`
+        <h1>💡 Idea Wall</h1>
+        <div id="session-bar-wrap"></div>
+        <div class="rtm-quick-add">
+          <input id="idea-input" placeholder="พิมพ์ไอเดีย... กด Enter เพื่อโยน" autocomplete="off" maxlength="200" />
+        </div>
+        <div class="rtm-filter-row" id="filter-row"></div>
+        <div id="ideas-list"></div>
+      `;
+
+      const input = document.querySelector("#idea-input");
+      input.focus();
+      input.addEventListener("keydown", async (e) => {
+        if (e.key !== "Enter") return;
+        const val = input.value.trim();
+        if (!val) return;
+        input.value = "";
+        input.disabled = true;
+        try { await createIdea(val); }
+        catch (err) {
+          console.error(err);
+          alert("โยนไอเดียไม่สำเร็จ · " + err.message);
+          input.value = val;
+        }
+        input.disabled = false;
+        input.focus();
+      });
+
+      const renderAll = () => {
+        renderSessionBar();
+        renderFilterRow();
+        renderIdeasList();
+      };
+      renderAll();
+
+      const unsubs = [
+        store.subscribe("ideas", renderAll),
+        store.subscribe("activeSession", renderAll),
+        store.subscribe("users", renderAll),
+        store.subscribe("ideasFilter", renderAll),
+      ];
+      return () => unsubs.forEach(u => u());
+    };
+
+    const renderSessionBar = () => {
+      const el = document.querySelector("#session-bar-wrap");
+      if (!el) return;
+      const active = store.get("activeSession");
+      el.innerHTML = active ? html`
+        <div class="rtm-session-bar rtm-session-active">
+          <span class="rtm-session-dot"></span>
+          <span>Session: <b>${active.name}</b></span>
+          <span class="rtm-session-count">${active.idea_count || 0} ideas</span>
+          <button class="rtm-btn-inline" id="btn-end-session">🏁 End Session</button>
+        </div>
+      ` : html`
+        <div class="rtm-session-bar rtm-session-idle">
+          <span>ไม่มี session ที่กำลังทำอยู่</span>
+          <span style="margin-left:auto"></span>
+          <button class="rtm-btn-inline" id="btn-start-session">▶ เริ่ม Session</button>
+        </div>
+      `;
+      document.querySelector("#btn-start-session")?.addEventListener("click",
+        () => store.set("modal", { name: "session-start" }));
+      document.querySelector("#btn-end-session")?.addEventListener("click",
+        () => store.set("modal", { name: "session-end" }));
+    };
+
+    const renderFilterRow = () => {
+      const el = document.querySelector("#filter-row");
+      if (!el) return;
+      const filter = store.get("ideasFilter") || "all";
+      const uid = store.get("auth").user?.uid;
+      const all = store.get("ideas") || [];
+      const mineCount = all.filter(i => i.created_by === uid).length;
+      el.innerHTML = html`
+        <button class="rtm-pill ${filter === 'all' ? 'active' : ''}" data-filter="all">ทั้งหมด · ${all.length}</button>
+        <button class="rtm-pill ${filter === 'mine' ? 'active' : ''}" data-filter="mine">ของฉัน · ${mineCount}</button>
+      `;
+      el.querySelectorAll("[data-filter]").forEach(b => {
+        b.addEventListener("click", () => store.set("ideasFilter", b.dataset.filter));
+      });
+    };
+
+    const renderIdeasList = () => {
+      const el = document.querySelector("#ideas-list");
+      if (!el) return;
+      const filter = store.get("ideasFilter") || "all";
+      const uid = store.get("auth").user?.uid;
+      const all = store.get("ideas") || [];
+      const ideas = filter === "mine" ? all.filter(i => i.created_by === uid) : all;
+      if (ideas.length === 0) {
+        el.innerHTML = html`<div class="rtm-empty">${filter === "mine" ? "คุณยังไม่มีไอเดีย" : "ยังไม่มีไอเดีย — พิมพ์บรรทัดแรกด้านบน"}</div>`;
+        return;
+      }
+      el.innerHTML = html`<div class="rtm-idea-grid">${ideas.map(renderIdeaCard)}</div>`;
+    };
+
+    const renderIdeaCard = (idea) => {
+      const user = userByUid(idea.created_by);
+      const color = user?.color || "#4A4741";
+      const short = user?.short_code || "?";
+      return html`
+        <div class="rtm-idea-card" style="border-left-color:${escape(color)}">
+          <div class="rtm-idea-header">
+            <div class="rtm-avatar-sm" style="background:${escape(color)}">${escape(short)}</div>
+            ${idea.session_tag ? raw(`<span class="rtm-session-tag">🏷 ${escape(idea.session_tag)}</span>`) : ""}
+          </div>
+          <div class="rtm-idea-title">${idea.title}</div>
+          <div class="rtm-idea-time">${fmtRelTime(idea.created_at)}</div>
+        </div>
+      `;
+    };
+
+    // ===== STUB VIEWS =====
     const stub = name => () => {
       const el = document.querySelector("#route-outlet");
       if (el) el.innerHTML = `<h1>${name}</h1><p style="color:var(--ink-tertiary);margin-top:16px">กำลังพัฒนา</p>`;
       return () => {};
     };
 
-    route("/ideas",    stub("💡 Idea Wall"));
+    route("/ideas",    viewIdeas);
     route("/decide",   stub("🎯 Decision Board"));
     route("/live",     stub("🚀 Live Projects"));
     route("/live/:id", p => stub(`🚀 Project ${p.id}`)());
@@ -434,36 +838,131 @@
     route("/team",     stub("👥 Team Board"));
     route("/lessons",  stub("📚 Lessons"));
 
-    // ===== DATA · users =====
-    // โหลด profile ของ current user จาก users/{uid}
-    const loadUserProfile = async (uid) => {
-      try {
-        const snap = await getDoc(doc(db, "users", uid));
-        return snap.exists() ? snap.data() : null;
-      } catch (e) {
-        console.error("loadUserProfile failed:", e);
-        return null;
+    // ===== MODAL · session-start =====
+    const renderSessionStartModal = () => html`
+      <div class="rtm-modal-backdrop" data-close-modal>
+        <div class="rtm-modal">
+          <h2>▶ เริ่ม Idea Session</h2>
+          <p class="rtm-modal-hint">ตั้งชื่อประชุมนี้ · ไอเดียที่โยนช่วงนี้จะ tag ด้วยชื่อนี้อัตโนมัติ</p>
+          <input id="modal-session-name" placeholder="RTM Kick-off ก.ค." autocomplete="off" maxlength="80" />
+          <div class="rtm-modal-actions">
+            <button class="btn-secondary" data-close-modal>ยกเลิก</button>
+            <button class="btn-primary" id="btn-modal-start">▶ เริ่ม</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // ===== MODAL · session-end =====
+    const renderSessionEndModal = () => {
+      const active = store.get("activeSession");
+      if (!active) return "";
+      const all = store.get("ideas") || [];
+      const inSession = all.filter(i => i.session_tag === active.name);
+      const cnt = { new: 0, do_now: 0, park: 0, kill: 0, promoted: 0 };
+      inSession.forEach(i => { cnt[i.status] = (cnt[i.status] || 0) + 1; });
+      return html`
+        <div class="rtm-modal-backdrop" data-close-modal>
+          <div class="rtm-modal">
+            <h2>🏁 End Session</h2>
+            <p class="rtm-modal-hint">"${active.name}"</p>
+            <div class="rtm-summary">
+              <div>Ideas ในประชุม: <b>${inSession.length}</b></div>
+              <div>· ยังไม่ triage: ${cnt.new}</div>
+              <div>· Do Now: ${cnt.do_now}</div>
+              <div>· Park: ${cnt.park}</div>
+              <div>· Kill: ${cnt.kill}</div>
+              ${cnt.promoted ? raw(`<div>· Promoted: ${cnt.promoted}</div>`) : ""}
+            </div>
+            <div class="rtm-modal-actions">
+              <button class="btn-secondary" data-close-modal>กลับ</button>
+              <button class="btn-primary" id="btn-modal-end">🏁 จบ Session</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    // ===== MODAL RENDERER =====
+    const closeModal = () => store.set("modal", null);
+
+    const mountModal = () => {
+      const root = document.querySelector("#modal-root");
+      const m = store.get("modal");
+      if (!m) { root.innerHTML = ""; return; }
+      let content = "";
+      if (m.name === "session-start") content = renderSessionStartModal();
+      else if (m.name === "session-end") content = renderSessionEndModal();
+      root.innerHTML = content;
+      wireModalEvents();
+    };
+
+    const wireModalEvents = () => {
+      document.querySelectorAll("[data-close-modal]").forEach(el => {
+        el.addEventListener("click", (e) => {
+          if (e.target === el || e.currentTarget === e.target) closeModal();
+        });
+      });
+
+      const startInput = document.querySelector("#modal-session-name");
+      if (startInput) {
+        startInput.focus();
+        startInput.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") document.querySelector("#btn-modal-start")?.click();
+          if (e.key === "Escape") closeModal();
+        });
       }
+
+      document.querySelector("#btn-modal-start")?.addEventListener("click", async () => {
+        const name = document.querySelector("#modal-session-name").value.trim();
+        if (!name) { document.querySelector("#modal-session-name").focus(); return; }
+        const btn = document.querySelector("#btn-modal-start");
+        btn.disabled = true;
+        try { await startSession(name); closeModal(); }
+        catch (e) { alert("Error: " + e.message); btn.disabled = false; }
+      });
+
+      document.querySelector("#btn-modal-end")?.addEventListener("click", async () => {
+        const active = store.get("activeSession");
+        if (!active) return;
+        const btn = document.querySelector("#btn-modal-end");
+        btn.disabled = true;
+        try { await endSession(active.id); closeModal(); }
+        catch (e) { alert("Error: " + e.message); btn.disabled = false; }
+      });
     };
 
     // ===== BOOT =====
     let bootedShell = false;
+    let routerStarted = false;
+    let listenersUp = false;
 
     const bootShell = async (user) => {
       const profile = await loadUserProfile(user.uid);
       store.set("auth", { user, profile, ready: true, blocked: false });
 
-      if (bootedShell) {
-        mountShell();
-        return;
+      if (!listenersUp) {
+        listenersUp = true;
+        subscribeUsers();
+        subscribeActiveSession();
+        subscribeIdeas();
+        store.subscribe("modal", mountModal);
+        mountModal();
       }
-      bootedShell = true;
-      mountShell();
-      window.addEventListener("hashchange", renderRoute);
-      renderRoute();
+
+      if (!bootedShell) {
+        bootedShell = true;
+        mountShell();
+        if (!routerStarted) {
+          routerStarted = true;
+          window.addEventListener("hashchange", renderRoute);
+        }
+        renderRoute();
+      } else {
+        mountShell();
+      }
     };
 
-    // Initial: show loading
     document.querySelector("#app").innerHTML =
       `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:var(--ink-tertiary)">กำลังโหลด...</div>`;
 
@@ -483,7 +982,7 @@
       await bootShell(user);
     });
 
-    // Expose for debug
+    // Debug
     window.__RTM = { store, go, state, auth, db };
   </script>
 </body>
