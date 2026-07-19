@@ -1353,7 +1353,7 @@
         <div class="rtm-modal-backdrop" data-dlg-cancel>
           <div class="rtm-modal rtm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="dlg-title">
             <h2 id="dlg-title">${title}</h2>
-            ${body ? html`<p class="rtm-modal-hint" style="white-space:pre-line">${body}</p>` : raw("")}
+            ${body ? raw(`<p class="rtm-modal-hint" style="white-space:pre-line">${escape(body)}</p>`) : raw("")}
             <div class="rtm-modal-actions">
               <button class="btn-secondary" data-dlg-cancel type="button">${cancelLabel}</button>
               <button class="${danger ? "btn-danger" : "btn-primary"}" data-dlg-ok type="button">${okLabel}</button>
@@ -1379,7 +1379,7 @@
         <div class="rtm-modal-backdrop" data-dlg-cancel>
           <div class="rtm-modal rtm-dialog" role="dialog" aria-modal="true" aria-labelledby="dlg-title">
             <h2 id="dlg-title">${title}</h2>
-            ${body ? html`<p class="rtm-modal-hint">${body}</p>` : raw("")}
+            ${body ? raw(`<p class="rtm-modal-hint">${escape(body)}</p>`) : raw("")}
             <input id="dlg-input" type="text" value="${value}" placeholder="${placeholder}" aria-labelledby="dlg-title">
             <div class="rtm-modal-actions">
               <button class="btn-secondary" data-dlg-cancel type="button">${cancelLabel}</button>
