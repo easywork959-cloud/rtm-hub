@@ -311,6 +311,61 @@
       margin-bottom: var(--space-2);
       flex-wrap: wrap;
     }
+    .rtm-idea-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .rtm-idea-card:hover .rtm-idea-actions,
+    .rtm-idea-card:focus-within .rtm-idea-actions {
+      opacity: 1;
+    }
+    .rtm-icon-btn {
+      padding: 4px 6px;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-sm);
+      color: var(--ink-secondary);
+      opacity: 0.7;
+    }
+    .rtm-icon-btn:hover {
+      background: var(--bg-subtle);
+      opacity: 1;
+    }
+    .rtm-inline-edit {
+      width: 100%;
+      padding: 4px 6px;
+      border: 1.5px solid var(--sage);
+      border-radius: var(--radius-sm);
+      font: inherit;
+      font-size: var(--text-base);
+      outline: none;
+      background: var(--bg-elevated);
+    }
+    .rtm-session-picker {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin: var(--space-3) 0;
+    }
+    .rtm-session-option {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+    }
+    .rtm-session-option:last-child { border-bottom: none; }
+    .rtm-session-option:hover { background: var(--bg-subtle); }
+    .rtm-session-option input { margin: 0; flex-shrink: 0; }
+    .rtm-tag-active {
+      margin-left: auto;
+      font-size: var(--text-xs);
+      color: var(--good-fg);
+    }
     .rtm-session-tag {
       font-size: var(--text-xs);
       color: var(--ink-tertiary);
@@ -482,7 +537,7 @@
     const state = {
       auth: { user: null, profile: null, ready: false, blocked: false },
       route: { path: "/ideas", params: {} },
-      ideas: [], projects: [], users: [], activeSession: null,
+      ideas: [], projects: [], users: [], sessions: [], activeSession: null,
       currentProject: null, myActions: [], lessons: [],
       modal: null, toasts: [],
       ideasFilter: "all",
@@ -647,6 +702,15 @@
       });
     };
 
+    const subscribeAllSessions = () => {
+      const q = query(collection(db, "sessions"), orderBy("started_at", "desc"));
+      return onSnapshot(q, snap => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        store.set("sessions", list);
+      });
+    };
+
     const startSession = async (name) => {
       const user = store.get("auth").user;
       await addDoc(collection(db, "sessions"), {
@@ -674,6 +738,18 @@
         snap.forEach(d => list.push({ id: d.id, ...d.data() }));
         store.set("ideas", list);
       });
+    };
+
+    const updateIdeaTitle = async (id, title) => {
+      await updateDoc(doc(db, "ideas", id), { title: title.trim() });
+    };
+
+    const updateIdeaSessionTag = async (id, tag) => {
+      await updateDoc(doc(db, "ideas", id), { session_tag: tag });
+    };
+
+    const deleteIdea = async (id) => {
+      await deleteDoc(doc(db, "ideas", id));
     };
 
     const createIdea = async (title) => {
@@ -805,6 +881,7 @@
         return;
       }
       el.innerHTML = html`<div class="rtm-idea-grid">${ideas.map(renderIdeaCard)}</div>`;
+      wireIdeaCardEvents();
     };
 
     const renderIdeaCard = (idea) => {
@@ -812,15 +889,67 @@
       const color = user?.color || "#4A4741";
       const short = user?.short_code || "?";
       return html`
-        <div class="rtm-idea-card" style="border-left-color:${escape(color)}">
+        <div class="rtm-idea-card" data-idea-id="${idea.id}" style="border-left-color:${escape(color)}">
           <div class="rtm-idea-header">
             <div class="rtm-avatar-sm" style="background:${escape(color)}">${escape(short)}</div>
             ${idea.session_tag ? raw(`<span class="rtm-session-tag">🏷 ${escape(idea.session_tag)}</span>`) : ""}
+            <div class="rtm-idea-actions">
+              <button class="rtm-icon-btn" data-action="tag" title="Assign session">🏷</button>
+              <button class="rtm-icon-btn" data-action="edit" title="แก้ไข">✏️</button>
+              <button class="rtm-icon-btn" data-action="delete" title="ลบ">🗑</button>
+            </div>
           </div>
-          <div class="rtm-idea-title">${idea.title}</div>
+          <div class="rtm-idea-title" data-title>${idea.title}</div>
           <div class="rtm-idea-time">${fmtRelTime(idea.created_at)}</div>
         </div>
       `;
+    };
+
+    // ===== INTERACTIONS · idea card =====
+    const wireIdeaCardEvents = () => {
+      document.querySelectorAll(".rtm-idea-card").forEach(card => {
+        const id = card.dataset.ideaId;
+        card.querySelector('[data-action="tag"]')?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          store.set("modal", { name: "session-picker", ideaId: id });
+        });
+        card.querySelector('[data-action="edit"]')?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          startInlineEdit(card, id);
+        });
+        card.querySelector('[data-action="delete"]')?.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          const title = card.querySelector("[data-title]")?.textContent || "";
+          if (!confirm(`ลบไอเดีย "${title}" ?`)) return;
+          try { await deleteIdea(id); }
+          catch (err) { alert("ลบไม่สำเร็จ · " + err.message); }
+        });
+      });
+    };
+
+    const startInlineEdit = (card, id) => {
+      const titleEl = card.querySelector("[data-title]");
+      const current = titleEl.textContent;
+      const input = document.createElement("input");
+      input.type = "text";
+      input.value = current;
+      input.className = "rtm-inline-edit";
+      input.maxLength = 200;
+      titleEl.replaceWith(input);
+      input.focus();
+      input.select();
+
+      const commit = async () => {
+        const val = input.value.trim();
+        if (!val || val === current) { input.replaceWith(titleEl); return; }
+        try { await updateIdeaTitle(id, val); }
+        catch (err) { alert("แก้ไขไม่สำเร็จ · " + err.message); input.replaceWith(titleEl); }
+      };
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") { e.preventDefault(); commit(); }
+        if (e.key === "Escape") { input.replaceWith(titleEl); }
+      });
+      input.addEventListener("blur", commit);
     };
 
     // ===== STUB VIEWS =====
@@ -883,6 +1012,42 @@
       `;
     };
 
+    // ===== MODAL · session-picker =====
+    const renderSessionPickerModal = () => {
+      const m = store.get("modal");
+      const idea = (store.get("ideas") || []).find(i => i.id === m.ideaId);
+      if (!idea) return "";
+      const sessions = store.get("sessions") || [];
+      const current = idea.session_tag;
+      return html`
+        <div class="rtm-modal-backdrop" data-close-modal>
+          <div class="rtm-modal">
+            <h2>🏷 Assign Session</h2>
+            <p class="rtm-modal-hint">"${idea.title}"</p>
+            <div class="rtm-session-picker">
+              <label class="rtm-session-option">
+                <input type="radio" name="session-pick" value="" ${!current ? "checked" : ""} />
+                <span style="color:var(--ink-tertiary)">— ไม่มี tag —</span>
+              </label>
+              ${sessions.length === 0
+                ? raw(`<div style="padding:16px;text-align:center;color:var(--ink-tertiary);font-size:var(--text-sm)">ยังไม่มี session</div>`)
+                : sessions.map(s => html`
+                <label class="rtm-session-option">
+                  <input type="radio" name="session-pick" value="${s.name}" ${current === s.name ? "checked" : ""} />
+                  <span>${s.name}</span>
+                  ${!s.ended_at ? raw('<span class="rtm-tag-active">🟢 active</span>') : ""}
+                </label>
+              `)}
+            </div>
+            <div class="rtm-modal-actions">
+              <button class="btn-secondary" data-close-modal>ยกเลิก</button>
+              <button class="btn-primary" id="btn-modal-savetag">บันทึก</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
     // ===== MODAL RENDERER =====
     const closeModal = () => store.set("modal", null);
 
@@ -893,6 +1058,7 @@
       let content = "";
       if (m.name === "session-start") content = renderSessionStartModal();
       else if (m.name === "session-end") content = renderSessionEndModal();
+      else if (m.name === "session-picker") content = renderSessionPickerModal();
       root.innerHTML = content;
       wireModalEvents();
     };
@@ -930,6 +1096,16 @@
         try { await endSession(active.id); closeModal(); }
         catch (e) { alert("Error: " + e.message); btn.disabled = false; }
       });
+
+      document.querySelector("#btn-modal-savetag")?.addEventListener("click", async () => {
+        const selected = document.querySelector('input[name="session-pick"]:checked')?.value ?? "";
+        const tag = selected === "" ? null : selected;
+        const m = store.get("modal");
+        const btn = document.querySelector("#btn-modal-savetag");
+        btn.disabled = true;
+        try { await updateIdeaSessionTag(m.ideaId, tag); closeModal(); }
+        catch (e) { alert("Error: " + e.message); btn.disabled = false; }
+      });
     };
 
     // ===== BOOT =====
@@ -945,6 +1121,7 @@
         listenersUp = true;
         subscribeUsers();
         subscribeActiveSession();
+        subscribeAllSessions();
         subscribeIdeas();
         store.subscribe("modal", mountModal);
         mountModal();
