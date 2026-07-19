@@ -1603,6 +1603,34 @@
       for (const l of stale) await deleteDoc(doc(db, "lessons", l.id));
     };
 
+    // แก้ close report เฉพาะจุด — คง status closed + closed_at เดิม (ไม่ใช่ reopen) · verdict คำนวณใหม่เองจาก impact
+    // sync lesson doc ให้ตรง: มี→อัพเดต · เพิ่มใหม่→เขียน · ลบข้อความ→ลบ doc (คง closed_at เดิมของ lesson ไว้ ไม่เด้งขึ้นบน list)
+    const syncLessonOnEdit = async (project, lessonText, lessonTags) => {
+      const existing = (store.get("lessons") || []).filter(l => l.project_id === project.id);
+      if (lessonText) {
+        if (existing.length) {
+          await updateDoc(doc(db, "lessons", existing[0].id), { lesson_text: lessonText, tags: lessonTags || [] });
+          for (const dup of existing.slice(1)) await deleteDoc(doc(db, "lessons", dup.id));
+        } else {
+          await writeLesson({ ...project, lesson_learned: lessonText, lesson_tags: lessonTags });
+        }
+      } else {
+        for (const l of existing) await deleteDoc(doc(db, "lessons", l.id));
+      }
+    };
+    const updateClosedReport = async (project, patch) => {
+      await updateDoc(doc(db, "projects", project.id), {
+        result_text: patch.result_text,
+        impact_actual_value: patch.impact_actual_value,
+        impact_actual_unit: patch.impact_actual_unit,
+        impact_verified_by_uid: patch.impact_verified_by_uid || null,
+        impact_verified_at: patch.impact_verified_by_uid ? serverTimestamp() : null,
+        lesson_learned: patch.lesson_learned || null,
+        lesson_tags: patch.lesson_tags || [],
+      });
+      await syncLessonOnEdit(project, patch.lesson_learned || null, patch.lesson_tags || []);
+    };
+
     // Step 8: read-side. writeLesson() (Step 5) already writes lessons/ on close.
     const subscribeLessons = () => {
       const q = query(collection(db, "lessons"), orderBy("closed_at", "desc"));
@@ -2249,7 +2277,8 @@
           <div style="display:flex;gap:var(--space-2)">
             ${closed
               ? raw(`${verdictBadge(p, "sm")}<span class="rtm-badge" style="background:var(--sage-soft);color:var(--good-fg)">🔒 ปิดแล้ว</span>
-                     <button class="btn-secondary" id="btn-reopen-project" style="padding:8px 14px" title="กดปิดผิด? เปิดกลับมาแก้">↩️ เปิดใหม่</button>`)
+                     <button class="btn-secondary" id="btn-edit-closed" style="padding:8px 14px" title="แก้ตัวเลข/result/lesson โดยไม่เปิดใหม่">✏️ แก้</button>
+                     <button class="btn-secondary" id="btn-reopen-project" style="padding:8px 14px" title="กดปิดผิด? เปิดกลับมาแก้ทั้งหมด">↩️ เปิดใหม่</button>`)
               : raw(`<button class="btn-secondary" id="btn-edit-project" style="padding:8px 14px">✏️ Edit</button>
                      <button class="btn-primary" id="btn-close-project" style="padding:8px 14px">🔒 Close</button>`)}
           </div>
@@ -2288,6 +2317,7 @@
 
       document.querySelector("#btn-close-project")?.addEventListener("click", () => store.set("modal", { name: "close-project", projectId: p.id }));
       document.querySelector("#btn-edit-project")?.addEventListener("click", () => store.set("modal", { name: "edit-project", projectId: p.id }));
+      document.querySelector("#btn-edit-closed")?.addEventListener("click", () => store.set("modal", { name: "edit-closed", projectId: p.id }));
       document.querySelector("#btn-reopen-project")?.addEventListener("click", async () => {
         if (!confirm(`เปิด "${p.title}" กลับมาแก้?\n\nresult + impact + verdict + lesson ที่บันทึกตอนปิดจะถูกล้าง\nproject กลับไปอยู่ Live (active) · ปิดใหม่ได้`)) return;
         const btn = document.querySelector("#btn-reopen-project");
@@ -3595,6 +3625,65 @@
       `;
     };
 
+    // ===== MODAL · edit-closed (แก้ close report เฉพาะจุด · ไม่เปิดใหม่) =====
+    const renderEditClosedModal = () => {
+      const m = store.get("modal");
+      const p = (store.get("projects") || []).find(x => x.id === m.projectId);
+      if (!p) return "";
+      const users = store.get("users") || [];
+      const unit = p.impact_actual_unit || p.impact_projected_unit || "฿/เดือน";
+      return html`
+        <div class="rtm-modal-backdrop" data-close-modal>
+          <div class="rtm-modal" style="max-width:560px">
+            <h2>✏️ แก้ Close Report</h2>
+            <p class="rtm-modal-hint">"${p.title}" · ยังปิดอยู่ (ไม่เปิดใหม่) · verdict คำนวณใหม่ตาม impact</p>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Result <span class="req">*</span> · ต้องมีตัวเลข</label>
+              <input type="text" id="ec-result" value="${escape(p.result_text || "")}" />
+              <div class="rtm-form-error" id="err-ec-result">Result ต้องมีตัวเลข</div>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Impact — Actual <span class="req">*</span></label>
+              <div class="rtm-form-row-inline">
+                <input type="number" id="ec-impact" step="0.01" value="${escape(p.impact_actual_value != null ? p.impact_actual_value : "")}" />
+                <select id="ec-unit">
+                  ${IMPACT_UNITS.map(u => `<option value="${escape(u)}" ${u === unit ? "selected" : ""}>${escape(u)}</option>`)}
+                </select>
+              </div>
+              <div class="rtm-form-hint">แก้เลขนี้ = verdict Win/Partial/Miss เปลี่ยนตาม</div>
+              <div class="rtm-form-error" id="err-ec-impact">กรอกตัวเลข impact จริง</div>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Verified by (optional)</label>
+              <select id="ec-verified">
+                <option value="">— ไม่ระบุ —</option>
+                ${users.map(u => `<option value="${escape(u.uid)}" ${u.uid === p.impact_verified_by_uid ? "selected" : ""}>${escape(u.display_name || u.email)} (${escape(u.short_code || "?")})</option>`)}
+              </select>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Lesson learned</label>
+              <textarea id="ec-lesson" rows="2">${escape(p.lesson_learned || "")}</textarea>
+              <div class="rtm-form-hint">ลบข้อความให้ว่าง = เอา lesson ออกจาก Library</div>
+            </div>
+
+            <div class="rtm-form-row">
+              <label class="rtm-form-label">Tags (คั่นด้วย comma)</label>
+              <input type="text" id="ec-tags" value="${escape((p.lesson_tags || []).join(", "))}" />
+            </div>
+
+            <div class="rtm-modal-actions">
+              <button class="btn-secondary" data-close-modal>ยกเลิก</button>
+              <button class="btn-primary" id="btn-modal-edit-closed">บันทึกการแก้</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
     // ===== MODAL · edit-project =====
     const renderEditProjectModal = () => {
       const m = store.get("modal");
@@ -3655,6 +3744,7 @@
       else if (m.name === "triage") content = renderTriageModal();
       else if (m.name === "promote") content = renderPromoteModal();
       else if (m.name === "close-project") content = renderCloseProjectModal();
+      else if (m.name === "edit-closed") content = renderEditClosedModal();
       else if (m.name === "edit-project") content = renderEditProjectModal();
       root.innerHTML = content;
       wireModalEvents();
@@ -3840,6 +3930,39 @@
         } catch (e) { alert("ปิดไม่สำเร็จ · " + e.message); btn.disabled = false; }
       });
 
+      // ===== EDIT CLOSED REPORT WIRE (แก้เฉพาะจุด · คง closed) =====
+      document.querySelector("#btn-modal-edit-closed")?.addEventListener("click", async () => {
+        const m = store.get("modal");
+        const p = (store.get("projects") || []).find(x => x.id === m.projectId);
+        if (!p) return;
+        const result = document.querySelector("#ec-result").value.trim();
+        const impact = parseFloat(document.querySelector("#ec-impact").value);
+        const unit = document.querySelector("#ec-unit").value;
+        const verified = document.querySelector("#ec-verified").value || null;
+        const lesson = document.querySelector("#ec-lesson").value.trim();
+        const tags = document.querySelector("#ec-tags").value.split(",").map(t => t.trim()).filter(Boolean);
+
+        let ok = true;
+        document.querySelectorAll(".rtm-form-error").forEach(e => e.classList.remove("show"));
+        if (!/\d/.test(result)) { document.querySelector("#err-ec-result")?.classList.add("show"); ok = false; }
+        if (!Number.isFinite(impact)) { document.querySelector("#err-ec-impact")?.classList.add("show"); ok = false; }
+        if (!ok) return;
+
+        const btn = document.querySelector("#btn-modal-edit-closed");
+        btn.disabled = true;
+        try {
+          await updateClosedReport(p, {
+            result_text: result,
+            impact_actual_value: impact,
+            impact_actual_unit: unit,
+            impact_verified_by_uid: verified,
+            lesson_learned: lesson || null,
+            lesson_tags: tags,
+          });
+          closeModal();
+        } catch (e) { alert("บันทึกไม่สำเร็จ · " + e.message); btn.disabled = false; }
+      });
+
       // ===== EDIT PROJECT WIRE =====
       document.querySelector("#btn-modal-edit-project")?.addEventListener("click", async () => {
         const m = store.get("modal");
@@ -3930,7 +4053,7 @@
       projectById, allLessonTags,
       computeVerdict, verdictBadge, closedProjects, renderClosedCard,
       viewScoreboard, scoreboardStats, ideaFunnel, inPeriod, periodBounds,
-      mountModal, closeModal, closeProject, reopenProject };
+      mountModal, closeModal, closeProject, reopenProject, updateClosedReport };
   </script>
 </body>
 </html>
