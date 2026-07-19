@@ -31,6 +31,7 @@
       --good-fg: #4F7A5A;
       --warn-fg: #A8622A;
       --danger-fg: #8C3E30;
+      --danger-bg: #F2DDD5;
 
       --font-body: "IBM Plex Sans Thai", system-ui, sans-serif;
 
@@ -59,7 +60,7 @@
     h1, h2, h3 { font-weight: 600; line-height: 1.25; margin: 0; }
     h1 { font-size: var(--text-2xl); }
     h2 { font-size: var(--text-xl); }
-    button { font: inherit; cursor: pointer; }
+    button { font: inherit; cursor: pointer; border: none; background: none; }
     a { color: inherit; text-decoration: none; }
 
     /* ===== SHELL ===== */
@@ -72,6 +73,8 @@
       background: var(--bg-subtle);
       border-right: 1px solid var(--border);
       padding: var(--space-5) var(--space-3);
+      display: flex;
+      flex-direction: column;
     }
     .sidebar .brand {
       padding: 0 12px 24px;
@@ -83,6 +86,7 @@
       display: block;
       font-weight: 400;
     }
+    .sidebar nav { flex: 1; }
     .sidebar nav a {
       display: block;
       padding: var(--space-3) var(--space-4);
@@ -96,27 +100,112 @@
       font-weight: 500;
       border-left: 3px solid var(--sage);
     }
+    .sidebar .user {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-2);
+      border-top: 1px solid var(--border);
+      margin-top: var(--space-4);
+    }
+    .sidebar .user-info { flex: 1; min-width: 0; }
+    .sidebar .user-name {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar .user-role {
+      font-size: var(--text-xs);
+      color: var(--ink-tertiary);
+    }
+    .sidebar .user button {
+      color: var(--ink-tertiary);
+      padding: var(--space-2);
+      font-size: var(--text-xs);
+    }
+    .sidebar .user button:hover { color: var(--danger-fg); }
     .main {
       padding: var(--space-6);
       max-width: 1280px;
+    }
+
+    /* ===== AVATAR DOT ===== */
+    .rtm-avatar {
+      width: 28px; height: 28px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: var(--text-sm);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    /* ===== AUTH GATE ===== */
+    .auth-gate {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: var(--space-6);
+    }
+    .auth-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8) var(--space-6);
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(44,42,38,.06);
+    }
+    .auth-card h1 { margin-bottom: var(--space-2); }
+    .auth-card p {
+      color: var(--ink-secondary);
+      font-size: var(--text-sm);
+      margin: 0 0 var(--space-6);
+    }
+    .btn-primary {
+      background: var(--sage);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      font-weight: 500;
+    }
+    .btn-primary:hover { background: #6B8B70; }
+    .btn-secondary {
+      background: transparent;
+      border: 1.5px solid var(--border-strong);
+      color: var(--ink-primary);
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+    }
+    .btn-secondary:hover { background: var(--bg-subtle); }
+    .auth-error {
+      color: var(--danger-fg);
+      font-size: var(--text-sm);
+      margin-top: var(--space-4);
     }
 
     /* ===== MOBILE ===== */
     @media (max-width: 767px) {
       .app-shell { grid-template-columns: 1fr; }
       .sidebar {
-        position: fixed; bottom: 0; left: 0; right: 0;
-        display: flex; justify-content: space-around;
+        position: fixed; bottom: 0; left: 0; right: 0; top: auto;
+        flex-direction: row;
+        justify-content: space-around;
         padding: var(--space-2);
         z-index: 100;
+        border-top: 1px solid var(--border);
+        border-right: none;
       }
-      .sidebar .brand { display: none; }
+      .sidebar .brand, .sidebar .user { display: none; }
       .sidebar nav { display: flex; width: 100%; justify-content: space-around; }
       .sidebar nav a { margin: 0; padding: var(--space-2); text-align: center; font-size: var(--text-xs); }
       .main { padding: var(--space-4); padding-bottom: 80px; }
     }
-
-    /* ===== COMPONENTS (empty · fill ตาม 05_BUILD_ORDER.md) ===== */
   </style>
 </head>
 <body>
@@ -126,27 +215,43 @@
 
   <script type="module">
     // ==========================================================
-    // RTM Hub · Single HTML skeleton
-    // อ่านก่อนแก้: 00_MASTER_SPEC.md · 01_DATA_MODEL.md · 04_APP_SKELETON.md
+    // RTM Hub · Single HTML
+    // อ่านก่อนแก้: 00_MASTER_SPEC · 01_DATA_MODEL · 04_APP_SKELETON
     // ==========================================================
 
-    // ===== FIREBASE (จาก CDN · โหลดตอน Step 1) =====
-    // Step 0 ไม่ต้อง import firebase — ยังไม่ใช้
-    // Step 1 เปิด block ล่างนี้:
-    //
-    // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    // import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
-    //   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    // import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
-    //          onSnapshot, query, where, orderBy, serverTimestamp }
-    //   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    //
-    // const firebaseConfig = window.__RTM_FIREBASE_CONFIG__;
-    // const app = initializeApp(firebaseConfig);
-    // export const auth = getAuth(app);
-    // export const db = getFirestore(app);
-    // export const TENANT_ID = "rtm-bkk-central";
-    // export const DC_ID = "bkk-central";
+    // ===== FIREBASE =====
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc, getDocs,
+      onSnapshot, query, where, orderBy, limit, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC1ViE5rJ0lADkU-7haInW-0lbYQr7XzmU",
+      authDomain: "rtm-hub-bd668.firebaseapp.com",
+      projectId: "rtm-hub-bd668",
+      storageBucket: "rtm-hub-bd668.firebasestorage.app",
+      messagingSenderId: "633629861435",
+      appId: "1:633629861435:web:e5096aa44cbda8702a9e1e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const TENANT_ID = "rtm-bkk-central";
+    const DC_ID = "bkk-central";
+
+    // ===== ALLOWLIST =====
+    // ตรงกับ firestore.rules (ห้ามลืม sync)
+    const ALLOWLIST = new Set([
+      "pojaman.j@gmail.com",
+      "thapanik.p@gmail.com",
+      "jamee.pt@gmail.com",
+      "easkwork959@gmail.com",
+    ]);
 
     // ===== HTML TEMPLATE + ESCAPE =====
     const escape = s => String(s ?? "").replace(/[&<>"']/g,
@@ -162,9 +267,9 @@
 
     const raw = s => ({ __raw: s });
 
-    // ===== STORE (pub/sub) =====
+    // ===== STORE =====
     const state = {
-      auth: { user: null, ready: false },
+      auth: { user: null, ready: false, blocked: false },
       route: { path: "/ideas", params: {} },
       ideas: [], projects: [], users: [], activeSession: null,
       currentProject: null, myActions: [], lessons: [],
@@ -186,7 +291,7 @@
       _debug: () => ({ ...state }),
     };
 
-    // ===== ROUTER (hash) =====
+    // ===== ROUTER =====
     const routes = [];
     let currentCleanup = null;
 
@@ -221,6 +326,49 @@
 
     const go = path => { location.hash = path; };
 
+    // ===== VIEW · auth-gate =====
+    const mountAuthGate = ({ blocked = false, blockedEmail = "" } = {}) => {
+      document.querySelector("#app").innerHTML = html`
+        <div class="auth-gate">
+          <div class="auth-card">
+            <h1>RTM Hub</h1>
+            <p>Execution tool สำหรับทีม RTM · bkk-central</p>
+            ${raw(blocked ? `
+              <div class="auth-error">
+                Email <b>${escape(blockedEmail)}</b> ไม่มีสิทธิ์เข้าใช้<br />
+                ติดต่อ manager
+              </div>
+              <div style="margin-top:24px">
+                <button id="btn-signout" class="btn-secondary">ออกจากระบบ</button>
+              </div>
+            ` : `
+              <button id="btn-signin" class="btn-primary">
+                เข้าสู่ระบบด้วย Google
+              </button>
+            `)}
+          </div>
+        </div>
+      `;
+      const signIn = document.querySelector("#btn-signin");
+      const signOutBtn = document.querySelector("#btn-signout");
+      if (signIn) signIn.addEventListener("click", handleSignIn);
+      if (signOutBtn) signOutBtn.addEventListener("click", handleSignOut);
+    };
+
+    const handleSignIn = async () => {
+      try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+      } catch (e) {
+        console.error("sign-in failed:", e);
+        alert("Sign in ล้มเหลว · " + e.message);
+      }
+    };
+
+    const handleSignOut = async () => {
+      await signOut(auth);
+    };
+
     // ===== SHELL =====
     const NAV = [
       { href: "#/ideas",   icon: "💡", label: "Ideas" },
@@ -234,6 +382,14 @@
     let shellSubscribed = false;
     const mountShell = () => {
       const currentPath = "#" + store.get("route").path;
+      const u = store.get("auth").user || {};
+      const profile = store.get("auth").profile || {};
+
+      const avatarBg = profile.color || "var(--ink-dot)";
+      const shortCode = profile.short_code || (u.email || "?")[0].toUpperCase();
+      const displayName = profile.display_name || u.displayName || u.email || "";
+      const role = profile.role || "member";
+
       document.querySelector("#app").innerHTML = html`
         <div class="app-shell">
           <aside class="sidebar">
@@ -241,23 +397,33 @@
             <nav>
               ${NAV.map(n => `<a href="${n.href}" class="${currentPath.startsWith(n.href) ? "active" : ""}">${n.icon} ${n.label}</a>`)}
             </nav>
+            <div class="user">
+              <div class="rtm-avatar" style="background:${escape(avatarBg)}">${escape(shortCode)}</div>
+              <div class="user-info">
+                <div class="user-name">${escape(displayName)}</div>
+                <div class="user-role">${escape(role)}</div>
+              </div>
+              <button id="btn-signout-shell" title="ออกจากระบบ">↪</button>
+            </div>
           </aside>
           <main class="main" id="route-outlet">
             <div style="color:var(--ink-tertiary)">loading...</div>
           </main>
         </div>
       `;
+      document.querySelector("#btn-signout-shell")?.addEventListener("click", handleSignOut);
+
       if (!shellSubscribed) {
         shellSubscribed = true;
         store.subscribe("route", () => mountShell());
       }
     };
 
-    // ===== STUB VIEWS (ใส่จริงตาม 05_BUILD_ORDER.md) =====
+    // ===== STUB VIEWS (Step 2+ replace) =====
     const stub = name => () => {
       const el = document.querySelector("#route-outlet");
       if (el) el.innerHTML = `<h1>${name}</h1><p style="color:var(--ink-tertiary)">TODO · build ตาม 05_BUILD_ORDER.md</p>`;
-      return () => {}; // cleanup noop
+      return () => {};
     };
 
     route("/ideas",    stub("💡 Idea Wall"));
@@ -268,13 +434,57 @@
     route("/team",     stub("👥 Team Board"));
     route("/lessons",  stub("📚 Lessons"));
 
-    // ===== BOOT =====
-    mountShell();
-    window.addEventListener("hashchange", renderRoute);
-    renderRoute();
+    // ===== DATA · users =====
+    // โหลด profile ของ current user จาก users/{uid}
+    const loadUserProfile = async (uid) => {
+      try {
+        const snap = await getDoc(doc(db, "users", uid));
+        return snap.exists() ? snap.data() : null;
+      } catch (e) {
+        console.error("loadUserProfile failed:", e);
+        return null;
+      }
+    };
 
-    // Expose for debug ใน console
-    window.__RTM = { store, go, state };
+    // ===== BOOT =====
+    let bootedShell = false;
+
+    const bootShell = async (user) => {
+      const profile = await loadUserProfile(user.uid);
+      store.set("auth", { user, profile, ready: true, blocked: false });
+
+      if (bootedShell) {
+        mountShell();
+        return;
+      }
+      bootedShell = true;
+      mountShell();
+      window.addEventListener("hashchange", renderRoute);
+      renderRoute();
+    };
+
+    // Initial: show loading
+    document.querySelector("#app").innerHTML =
+      `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:var(--ink-tertiary)">กำลังโหลด...</div>`;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        bootedShell = false;
+        shellSubscribed = false;
+        store.set("auth", { user: null, profile: null, ready: true, blocked: false });
+        mountAuthGate();
+        return;
+      }
+      if (!ALLOWLIST.has(user.email)) {
+        store.set("auth", { user, profile: null, ready: true, blocked: true });
+        mountAuthGate({ blocked: true, blockedEmail: user.email });
+        return;
+      }
+      await bootShell(user);
+    });
+
+    // Expose for debug
+    window.__RTM = { store, go, state, auth, db };
   </script>
 </body>
 </html>
