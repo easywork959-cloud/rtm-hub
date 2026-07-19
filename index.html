@@ -966,6 +966,66 @@
     .rtm-surface-x:hover { opacity: 1; }
     @media (prefers-reduced-motion: reduce) { .rtm-surface { animation: none; } }
 
+    /* ===== VERDICT + SCOREBOARD (Step 9) ===== */
+    .rtm-verdict {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: var(--text-xs); font-weight: var(--fw-medium); white-space: nowrap;
+    }
+    .rtm-vd-win     { background: var(--sage-soft);  color: var(--good-fg);   border: 1px solid var(--sage); }
+    .rtm-vd-partial { background: var(--peach-soft); color: var(--warn-fg);   border: 1px solid var(--peach); }
+    .rtm-vd-miss    { background: var(--terra-soft); color: var(--danger-fg); border: 1px solid var(--terracotta); }
+    .rtm-vd-reason  { font-weight: var(--fw-normal); opacity: 0.85; }
+    .rtm-proj-verdict { margin-bottom: var(--space-2); }
+    .rtm-card-closed .rtm-card-meta { margin-top: var(--space-1); }
+    .rtm-hl-verdict { gap: var(--space-3); flex-wrap: wrap; align-items: center; margin-top: var(--space-2); font-size: var(--text-sm); }
+    .rtm-hl-verdict .rtm-vd-win { color: var(--good-fg); }
+    .rtm-hl-verdict .rtm-vd-partial { color: var(--warn-fg); }
+    .rtm-hl-verdict .rtm-vd-miss { color: var(--danger-fg); }
+
+    .rtm-sb-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+    .rtm-sb-controls { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+    .rtm-sb-period { color: var(--ink-secondary); margin: 4px 0 var(--space-5); font-size: var(--text-sm); }
+    .rtm-sb-tally { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-6); }
+    .rtm-sb-tile { border-radius: var(--radius-xl); padding: var(--space-5); text-align: center; border: 1px solid var(--border); background: var(--bg-elevated); }
+    .rtm-sb-tile.rtm-vd-win     { background: var(--sage-soft);  border-color: var(--sage); }
+    .rtm-sb-tile.rtm-vd-partial { background: var(--peach-soft); border-color: var(--peach); }
+    .rtm-sb-tile.rtm-vd-miss    { background: var(--terra-soft); border-color: var(--terracotta); }
+    .rtm-sb-tile-total { background: var(--bg-subtle); }
+    .rtm-sb-num { font-size: var(--text-3xl); font-weight: var(--fw-semibold); line-height: 1; }
+    .rtm-sb-lbl { font-size: var(--text-sm); margin-top: var(--space-2); color: var(--ink-secondary); }
+    .rtm-sb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-4); }
+    .rtm-sb-panel { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: var(--space-5); box-shadow: var(--shadow-sm); }
+    .rtm-sb-panel h3 { font-size: var(--text-lg); margin-bottom: var(--space-3); }
+    .rtm-sb-impact-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) 0; border-bottom: 1px solid var(--border); }
+    .rtm-sb-impact-row:last-of-type { border-bottom: none; }
+    .rtm-sb-impact-val { font-size: var(--text-xl); font-weight: var(--fw-semibold); color: var(--good-fg); }
+    .rtm-sb-impact-unit { font-size: var(--text-sm); color: var(--ink-secondary); font-weight: var(--fw-normal); }
+    .rtm-sb-impact-meta { font-size: var(--text-xs); color: var(--ink-tertiary); white-space: nowrap; }
+    .rtm-sb-note { font-size: var(--text-xs); color: var(--ink-tertiary); margin-top: var(--space-3); }
+    .rtm-sb-funnel { display: flex; flex-direction: column; gap: 2px; }
+    .rtm-sb-fn-row { display: flex; align-items: center; justify-content: space-between; padding: var(--space-2) 0; border-bottom: 1px solid var(--border); font-size: var(--text-sm); }
+    .rtm-sb-fn-row:last-child { border-bottom: none; }
+    .rtm-sb-fn-row b { font-size: var(--text-base); }
+    .rtm-sb-closed-list { display: flex; flex-direction: column; gap: var(--space-1); }
+    .rtm-sb-closed-row { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-2); border-radius: var(--radius-sm); text-decoration: none; color: var(--ink-primary); }
+    .rtm-sb-closed-row:hover { background: var(--bg-subtle); }
+    .rtm-sb-closed-title { font-weight: var(--fw-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rtm-sb-closed-impact { font-size: var(--text-sm); color: var(--ink-secondary); white-space: nowrap; }
+    .rtm-sb-closed-date { font-size: var(--text-xs); color: var(--ink-tertiary); white-space: nowrap; }
+    @media (max-width: 720px) {
+      .rtm-sb-tally { grid-template-columns: repeat(2, 1fr); }
+      .rtm-sb-grid { grid-template-columns: 1fr; }
+      .rtm-sb-closed-row { grid-template-columns: auto 1fr; }
+      .rtm-sb-closed-impact, .rtm-sb-closed-date { grid-column: 2; }
+    }
+    @media print {
+      .sidebar, .no-print { display: none !important; }
+      .main, #route-outlet { padding: 0 !important; }
+      .rtm-sb-panel, .rtm-sb-tile { box-shadow: none !important; break-inside: avoid; }
+      body { background: #fff !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -1175,6 +1235,7 @@
       { href: "#/live",    icon: "🚀", label: "Live" },
       { href: "#/my",      icon: "📅", label: "My Week" },
       { href: "#/team",    icon: "👥", label: "Team" },
+      { href: "#/scoreboard", icon: "📊", label: "Scoreboard" },
       { href: "#/lessons", icon: "📚", label: "Lessons" },
     ];
 
@@ -1591,6 +1652,43 @@
       return { acts, mils, total, done, hasBlocker, stalled, stalledDays, nextAction };
     };
 
+    // ===== DERIVED · verdict (North Star teeth — Step 9) =====
+    // Go/No-Go stamp. Derived only — ไม่แก้ schema. เทียบ actual vs projected.
+    //   win     = actual ≥ projected (ถึง/เกินเป้า)
+    //   partial = มีผลจริง (>0) แต่ต่ำเป้า · หรือไม่มีเป้าให้เทียบ · หรือหน่วยคนละอย่าง (เทียบ win ไม่ได้)
+    //   miss    = ไม่มีผล (≤0) · ปิดแบบไม่มี actual · หรือ killed
+    //   none    = ยังไม่ปิด (active) → ไม่มี verdict
+    const VERDICT_META = {
+      win:     { code: "win",     label: "Win",     icon: "🟢", cls: "rtm-vd-win" },
+      partial: { code: "partial", label: "Partial", icon: "🟡", cls: "rtm-vd-partial" },
+      miss:    { code: "miss",    label: "Miss",    icon: "🔴", cls: "rtm-vd-miss" },
+      none:    { code: "none",    label: "—",       icon: "",   cls: "rtm-vd-none" },
+    };
+    const computeVerdict = (p) => {
+      if (!p) return { ...VERDICT_META.none, reason: "no project" };
+      if (p.status === "killed") return { ...VERDICT_META.miss, reason: "killed" };
+      if (p.status !== "closed")  return { ...VERDICT_META.none, reason: "ยังไม่ปิด" };
+      const actual = p.impact_actual_value;
+      const proj   = p.impact_projected_value;
+      if (actual == null)          return { ...VERDICT_META.miss, reason: "ปิดแบบไม่มี actual" };
+      if (actual <= 0)             return { ...VERDICT_META.miss, reason: "ผลจริง ≤ 0" };
+      if (proj == null)            return { ...VERDICT_META.partial, reason: "ไม่มีเป้าให้เทียบ" };
+      // หน่วยคนละอย่าง = เทียบเชิงเลขไม่ได้ → ไม่ประทับ win
+      const aUnit = (p.impact_actual_unit || "").trim();
+      const pUnit = (p.impact_projected_unit || "").trim();
+      if (aUnit && pUnit && aUnit !== pUnit) return { ...VERDICT_META.partial, reason: "หน่วยต่างกัน · เทียบ win ไม่ได้" };
+      const ratio = proj !== 0 ? actual / proj : (actual > 0 ? Infinity : 0);
+      if (actual >= proj) return { ...VERDICT_META.win,     reason: "actual ≥ projected", ratio };
+      return                      { ...VERDICT_META.partial, reason: "actual < projected", ratio };
+    };
+    // badge HTML · size: "sm" (pill เล็ก) | "lg" (พร้อม reason)
+    const verdictBadge = (p, size = "sm") => {
+      const v = computeVerdict(p);
+      if (v.code === "none") return "";
+      const r = (size === "lg" && v.reason) ? ` <span class="rtm-vd-reason">· ${escape(v.reason)}</span>` : "";
+      return `<span class="rtm-verdict ${v.cls}" title="${escape(v.reason || v.label)}">${v.icon} ${escape(v.label)}${r}</span>`;
+    };
+
     // ===== VIEW · ideas =====
     const viewIdeas = () => {
       const outlet = document.querySelector("#route-outlet");
@@ -1939,6 +2037,10 @@
     };
 
     const activeProjects = () => (store.get("projects") || []).filter(p => p.status === "active");
+    // closed OR killed — งานที่ปิดแล้วต้องมีทางเข้าถึงจาก UI (ไม่งั้นปิดแล้วหาย = ทีมไม่กล้าปิด)
+    const closedProjects = () => (store.get("projects") || [])
+      .filter(p => p.status === "closed" || p.status === "killed")
+      .sort((a, b) => (toDate(b.closed_at)?.getTime() ?? 0) - (toDate(a.closed_at)?.getTime() ?? 0));
 
     const renderWipBanner = () => {
       const el = document.querySelector("#live-wip");
@@ -1958,11 +2060,13 @@
       const all = activeProjects();
       const mineCount = all.filter(p => p.owner_lead_uid === uid || actionsOf(p.id).some(a => a.owner_uid === uid)).length;
       const blockerCount = all.filter(p => projectSummary(p.id).hasBlocker).length;
+      const closedCount = closedProjects().length;
       el.innerHTML = html`
         <div class="rtm-filter-row" style="margin-bottom:0">
           <button class="rtm-pill ${f==='all'?'active':''}" data-lfilter="all">All · ${all.length}</button>
           <button class="rtm-pill ${f==='mine'?'active':''}" data-lfilter="mine">ของฉัน · ${mineCount}</button>
           <button class="rtm-pill ${f==='blocker'?'active':''}" data-lfilter="blocker">🚩 Blocker · ${blockerCount}</button>
+          <button class="rtm-pill ${f==='closed'?'active':''}" data-lfilter="closed">🔒 Closed · ${closedCount}</button>
           <span style="margin-left:auto;display:flex;gap:var(--space-2);align-items:center">
             <span style="font-size:var(--text-sm);color:var(--ink-tertiary)">Sort:</span>
             <button class="rtm-pill ${s==='due'?'active':''}" data-lsort="due">Due soon</button>
@@ -1980,6 +2084,20 @@
       const uid = store.get("auth").user?.uid;
       const f = store.get("liveFilter") || "all";
       const s = store.get("liveSort") || "due";
+
+      // Closed lane — งานที่ปิดแล้ว + verdict badge (fix: ปิดแล้วเคยหายจาก UI)
+      if (f === "closed") {
+        const closed = closedProjects();
+        if (closed.length === 0) {
+          el.innerHTML = html`<div class="rtm-empty">ยังไม่มี project ปิด · ปิดงานแรกจาก card แล้วจะมาอยู่ที่นี่พร้อม verdict</div>`;
+          return;
+        }
+        el.innerHTML = html`<div class="rtm-live-grid">${closed.map(renderClosedCard)}</div>`;
+        el.querySelectorAll("[data-open-project]").forEach(card =>
+          card.addEventListener("click", () => go("/live/" + card.dataset.openProject)));
+        return;
+      }
+
       let list = activeProjects();
       if (f === "mine") list = list.filter(p => p.owner_lead_uid === uid || actionsOf(p.id).some(a => a.owner_uid === uid));
       if (f === "blocker") list = list.filter(p => projectSummary(p.id).hasBlocker);
@@ -2043,6 +2161,30 @@
       `;
     };
 
+    const renderClosedCard = (p) => {
+      const lead = userByUid(p.owner_lead_uid);
+      const v = computeVerdict(p);
+      const border = v.code === "win" ? "var(--sage)" : v.code === "partial" ? "var(--peach)" : "var(--terracotta)";
+      const actual = p.impact_actual_value != null
+        ? `<b>${escape(p.impact_actual_value)} ${escape(p.impact_actual_unit || "")}</b>`
+        : "—";
+      const proj = p.impact_projected_value != null
+        ? `<span style="color:var(--ink-tertiary)">/ เป้า ${escape(p.impact_projected_value)} ${escape(p.impact_projected_unit || "")}</span>`
+        : "";
+      return html`
+        <div class="rtm-project-card rtm-card-closed" data-open-project="${p.id}" style="border-left-color:${escape(border)}">
+          <div class="rtm-card-top">
+            <div class="rtm-card-title">${p.title}</div>
+            <div class="rtm-avatar-sm" style="background:${escape(lead?.color || "#4A4741")}" title="${escape(lead?.display_name || "lead")}">${escape(lead?.short_code || "?")}</div>
+          </div>
+          <div class="rtm-card-badges">${raw(verdictBadge(p, "sm"))}</div>
+          <div class="rtm-card-kpi">🎯 ${p.kpi_text}</div>
+          <div class="rtm-card-meta">${raw(actual)} ${raw(proj)}</div>
+          <div class="rtm-card-foot">🔒 ปิด ${fmtDate(p.closed_at)}${p.lesson_learned ? " · 💡 มี lesson" : ""}</div>
+        </div>
+      `;
+    };
+
     // ===== VIEW · project =====
     const uiProject = { open: {}, addingAction: null, addingMilestone: false };
 
@@ -2088,7 +2230,7 @@
           <h1 style="font-size:var(--text-2xl)">${p.title}</h1>
           <div style="display:flex;gap:var(--space-2)">
             ${closed
-              ? raw(`<span class="rtm-badge" style="background:var(--sage-soft);color:var(--good-fg)">🔒 ปิดแล้ว</span>`)
+              ? raw(`${verdictBadge(p, "sm")}<span class="rtm-badge" style="background:var(--sage-soft);color:var(--good-fg)">🔒 ปิดแล้ว</span>`)
               : raw(`<button class="btn-secondary" id="btn-edit-project" style="padding:8px 14px">✏️ Edit</button>
                      <button class="btn-primary" id="btn-close-project" style="padding:8px 14px">🔒 Close</button>`)}
           </div>
@@ -2110,6 +2252,7 @@
 
         ${closed && p.result_text ? raw(`
           <div class="rtm-proj-result">
+            <div class="rtm-proj-verdict">${verdictBadge(p, "lg")}</div>
             <div><b>Result:</b> ${escape(p.result_text)}</div>
             ${p.lesson_learned ? `<div style="margin-top:6px"><b>💡 Lesson:</b> ${escape(p.lesson_learned)}</div>` : ""}
             ${(p.lesson_tags||[]).length ? `<div style="margin-top:6px">${p.lesson_tags.map(t=>`<span class="rtm-tag-chip">${escape(t)}</span>`).join("")}</div>` : ""}
@@ -2875,6 +3018,19 @@
       const milWk = (store.get("allMilestones") || []).filter(m => m.status === "done" && inThisWeek(m.closed_at)).length;
       const lessonWk = (store.get("projects") || []).filter(p =>
         p.status === "closed" && p.lesson_learned && inThisWeek(p.closed_at)).length;
+      const closedWk = (store.get("projects") || []).filter(p =>
+        (p.status === "closed" || p.status === "killed") && inThisWeek(p.closed_at));
+      const vc = { win: 0, partial: 0, miss: 0 };
+      closedWk.forEach(p => { const c = computeVerdict(p).code; if (vc[c] != null) vc[c]++; });
+      const verdictLine = closedWk.length
+        ? `<div class="rtm-hl-row rtm-hl-verdict">
+             <span>🔒 <span class="rtm-hl-num">${closedWk.length}</span> ปิดสัปดาห์นี้:</span>
+             <span class="rtm-vd-win">🟢 ${vc.win} Win</span>
+             <span class="rtm-vd-partial">🟡 ${vc.partial} Partial</span>
+             <span class="rtm-vd-miss">🔴 ${vc.miss} Miss</span>
+             <a href="#/scoreboard" style="margin-left:auto;color:var(--good-fg)">Scoreboard →</a>
+           </div>`
+        : "";
       el.innerHTML = html`${raw(`
         <div class="rtm-team-hl">
           <h3>สัปดาห์นี้</h3>
@@ -2883,6 +3039,7 @@
             <span>🎯 <span class="rtm-hl-num">${milWk}</span> milestones closed</span>
             <span>📚 <span class="rtm-hl-num">${lessonWk}</span> lessons added</span>
           </div>
+          ${verdictLine}
         </div>`)}`;
     };
 
@@ -2960,7 +3117,7 @@
         <div class="rtm-lesson-card">
           <div class="rtm-lesson-head">
             <span class="rtm-lesson-title">${l.project_title}</span>
-            <span class="rtm-lesson-date">closed ${fmtDate(l.closed_at)}</span>
+            <span class="rtm-lesson-date">${p ? raw(verdictBadge(p, "sm")) : ""} closed ${fmtDate(l.closed_at)}</span>
           </div>
           <div class="rtm-lesson-deliv">${deliv}</div>
           <div class="rtm-lesson-text">💡 ${l.lesson_text}</div>
@@ -2969,6 +3126,155 @@
           ${p ? raw(`<a class="rtm-lesson-open" href="#/live/${escape(l.project_id)}">→ เปิด project</a>`) : ""}
         </div>
       `;
+    };
+
+    // ===== DERIVED · scoreboard (Step 9 · North Star reward loop) =====
+    const monthBounds = (ref = new Date()) => ({
+      start: new Date(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0),
+      end:   new Date(ref.getFullYear(), ref.getMonth() + 1, 0, 23, 59, 59, 999),
+    });
+    const periodBounds = (period) => {
+      if (period === "month") return monthBounds();
+      const { mon, sun } = weekBounds();
+      return { start: mon, end: sun };
+    };
+    const inPeriod = (ts, period) => {
+      const d = toDate(ts); if (!d) return false;
+      const { start, end } = periodBounds(period);
+      return d >= start && d <= end;
+    };
+    const periodLabel = (period) => {
+      if (period === "month") return `${TH_MONTHS[new Date().getMonth()]} ${new Date().getFullYear() + 543}`;
+      return weekLabel();
+    };
+
+    const scoreboardStats = (period = "week") => {
+      const projects = store.get("projects") || [];
+      const closed = projects
+        .filter(p => (p.status === "closed" || p.status === "killed") && inPeriod(p.closed_at, period))
+        .sort((a, b) => (toDate(b.closed_at)?.getTime() ?? 0) - (toDate(a.closed_at)?.getTime() ?? 0));
+      const tally = { win: 0, partial: 0, miss: 0 };
+      const impactByUnit = {}; // unit -> { total, verified, count } · แยกหน่วย (ห้ามบวกรวมข้ามหน่วย)
+      closed.forEach(p => {
+        const v = computeVerdict(p).code; if (tally[v] != null) tally[v]++;
+        if (p.impact_actual_value != null && p.impact_actual_value > 0) {
+          const unit = (p.impact_actual_unit || "—").trim() || "—";
+          const bucket = impactByUnit[unit] || (impactByUnit[unit] = { total: 0, verified: 0, count: 0 });
+          bucket.total += p.impact_actual_value;
+          bucket.count += 1;
+          if (p.impact_verified_by_uid) bucket.verified += p.impact_actual_value;
+        }
+      });
+      return { period, closed, tally, impactByUnit };
+    };
+
+    // idea funnel — รับ → do_now → promote / park / kill (created ในช่วง)
+    const ideaFunnel = (period = "week") => {
+      const inP = (store.get("ideas") || []).filter(i => inPeriod(i.created_at, period));
+      const count = st => inP.filter(i => i.status === st).length;
+      return {
+        received: inP.length,
+        newCount: count("new"),
+        do_now:   count("do_now"),
+        promoted: count("promoted"),
+        park:     count("park"),
+        kill:     count("kill"),
+      };
+    };
+
+    // ===== VIEW · scoreboard =====
+    const viewScoreboard = () => {
+      const outlet = document.querySelector("#route-outlet");
+      if (!store.get("scorePeriod")) store.set("scorePeriod", "week");
+      outlet.innerHTML = html`<div id="score-root"></div>`;
+      const renderAll = () => renderScoreboard();
+      renderAll();
+      const unsubs = [
+        store.subscribe("projects", renderAll),
+        store.subscribe("ideas", renderAll),
+        store.subscribe("users", renderAll),
+        store.subscribe("scorePeriod", renderAll),
+      ];
+      return () => unsubs.forEach(u => u());
+    };
+
+    const nf = (n) => (Math.round(n * 100) / 100).toLocaleString("en-US");
+
+    const renderScoreboard = () => {
+      const root = document.querySelector("#score-root");
+      if (!root) return;
+      const period = store.get("scorePeriod") || "week";
+      const st = scoreboardStats(period);
+      const fn = ideaFunnel(period);
+      const total = st.tally.win + st.tally.partial + st.tally.miss;
+
+      const impactRows = Object.entries(st.impactByUnit)
+        .sort((a, b) => b[1].count - a[1].count)
+        .map(([unit, b]) => `
+          <div class="rtm-sb-impact-row">
+            <span class="rtm-sb-impact-val">${escape(nf(b.total))} <span class="rtm-sb-impact-unit">${escape(unit)}</span></span>
+            <span class="rtm-sb-impact-meta">${b.count} project · verified ${escape(nf(b.verified))}</span>
+          </div>`).join("");
+
+      const closedList = st.closed.length
+        ? st.closed.map(p => `
+            <a class="rtm-sb-closed-row" href="#/live/${escape(p.id)}">
+              ${verdictBadge(p, "sm")}
+              <span class="rtm-sb-closed-title">${escape(p.title)}</span>
+              <span class="rtm-sb-closed-impact">${p.impact_actual_value != null ? escape(nf(p.impact_actual_value)) + " " + escape(p.impact_actual_unit || "") : "—"}</span>
+              <span class="rtm-sb-closed-date">${escape(fmtDate(p.closed_at))}</span>
+            </a>`).join("")
+        : `<div class="rtm-empty">ยังไม่มี project ปิดใน${period === "month" ? "เดือน" : "สัปดาห์"}นี้</div>`;
+
+      root.innerHTML = html`${raw(`
+        <div class="rtm-sb-head">
+          <h1>📊 Scoreboard</h1>
+          <div class="rtm-sb-controls no-print">
+            <div class="rtm-filter-row" style="margin-bottom:0">
+              <button class="rtm-pill ${period === 'week' ? 'active' : ''}" data-period="week">สัปดาห์นี้</button>
+              <button class="rtm-pill ${period === 'month' ? 'active' : ''}" data-period="month">เดือนนี้</button>
+            </div>
+            <button class="btn-secondary" id="btn-print-sb" style="padding:8px 14px">🖨 Print / PDF</button>
+          </div>
+        </div>
+        <p class="rtm-sb-period">${escape(periodLabel(period))}</p>
+
+        <div class="rtm-sb-tally">
+          <div class="rtm-sb-tile rtm-vd-win"><div class="rtm-sb-num">${st.tally.win}</div><div class="rtm-sb-lbl">🟢 Win</div></div>
+          <div class="rtm-sb-tile rtm-vd-partial"><div class="rtm-sb-num">${st.tally.partial}</div><div class="rtm-sb-lbl">🟡 Partial</div></div>
+          <div class="rtm-sb-tile rtm-vd-miss"><div class="rtm-sb-num">${st.tally.miss}</div><div class="rtm-sb-lbl">🔴 Miss</div></div>
+          <div class="rtm-sb-tile rtm-sb-tile-total"><div class="rtm-sb-num">${total}</div><div class="rtm-sb-lbl">ปิดทั้งหมด</div></div>
+        </div>
+
+        <div class="rtm-sb-grid">
+          <div class="rtm-sb-panel">
+            <h3>💰 Impact verified (แยกหน่วย)</h3>
+            ${impactRows || `<div class="rtm-empty" style="padding:16px">ยังไม่มี impact ที่วัดได้ในช่วงนี้</div>`}
+            <div class="rtm-sb-note">* ไม่บวกรวมข้ามหน่วย — ฿ กับ % กับ ร้าน คนละเรื่อง</div>
+          </div>
+          <div class="rtm-sb-panel">
+            <h3>🔀 Idea funnel</h3>
+            <div class="rtm-sb-funnel">
+              <div class="rtm-sb-fn-row"><span>💡 รับเข้า</span><b>${fn.received}</b></div>
+              <div class="rtm-sb-fn-row"><span>🎯 Do Now</span><b>${fn.do_now}</b></div>
+              <div class="rtm-sb-fn-row"><span>🚀 Promote</span><b>${fn.promoted}</b></div>
+              <div class="rtm-sb-fn-row"><span>🅿️ Park</span><b>${fn.park}</b></div>
+              <div class="rtm-sb-fn-row"><span>🗑 Kill</span><b>${fn.kill}</b></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rtm-sb-panel">
+          <h3>🔒 Project ปิดในช่วงนี้ (${st.closed.length})</h3>
+          <div class="rtm-sb-closed-list">${closedList}</div>
+        </div>
+      `)}`;
+
+      root.querySelectorAll("[data-period]").forEach(b =>
+        b.addEventListener("click", () => store.set("scorePeriod", b.dataset.period)));
+      root.querySelector("#btn-print-sb")?.addEventListener("click", () => window.print());
+      root.querySelectorAll(".rtm-sb-closed-row").forEach(a =>
+        a.addEventListener("click", (e) => { e.preventDefault(); go("/live/" + a.getAttribute("href").split("/").pop()); }));
     };
 
     // ===== STUB VIEWS =====
@@ -2984,6 +3290,7 @@
     route("/live/:id", viewProject);
     route("/my",       viewMy);
     route("/team",     viewTeam);
+    route("/scoreboard", viewScoreboard);
     route("/lessons",  viewLessons);
 
     // ===== MODAL · session-start =====
@@ -3502,8 +3809,8 @@
             lesson_tags: tags,
           });
           closeModal();
-          alert("🎉 ปิด project แล้ว" + (lesson ? " · lesson บันทึกเข้า Lessons" : ""));
-          go("/live");
+          // North Star: แทน alert เด้ง Live ด้วยหน้าทวน — เปิด project detail ที่โชว์ verdict badge + result
+          go("/live/" + p.id);
         } catch (e) { alert("ปิดไม่สำเร็จ · " + e.message); btn.disabled = false; }
       });
 
@@ -3594,7 +3901,9 @@
       renderTeamMatrix, renderTeamAlerts, renderTeamHighlights, renderTeamCheckin,
       renderPromoteModal,
       viewIdeas, viewLessons, renderLessonCard, subscribeLessons, searchLessons, matchLessons,
-      projectById, allLessonTags };
+      projectById, allLessonTags,
+      computeVerdict, verdictBadge, closedProjects, renderClosedCard,
+      viewScoreboard, scoreboardStats, ideaFunnel, inPeriod, periodBounds };
   </script>
 </body>
 </html>
