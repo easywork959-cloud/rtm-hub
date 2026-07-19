@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RTM Hub</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ===== TOKENS (from 02_DESIGN_SYSTEM.md) ===== */
+    :root {
+      --bg-primary: #FAF7F2;
+      --bg-elevated: #FFFFFF;
+      --bg-subtle: #F2EDE3;
+      --border: #E6DFD1;
+      --border-strong: #C9BFA8;
+
+      --ink-primary: #2C2A26;
+      --ink-secondary: #6B655A;
+      --ink-tertiary: #A39B8A;
+
+      --sage: #7A9B7E;      --sage-soft: #DCE7DD;
+      --peach: #E8A67C;     --peach-soft: #F7E3D2;
+      --terracotta: #C87565;--terra-soft: #F2DDD5;
+      --plum: #8B6B8E;      --plum-soft: #E4D9E5;
+      --ink-dot: #4A4741;
+
+      --good-fg: #4F7A5A;
+      --warn-fg: #A8622A;
+      --danger-fg: #8C3E30;
+
+      --font-body: "IBM Plex Sans Thai", system-ui, sans-serif;
+
+      --text-xs: .75rem;   --text-sm: .875rem;  --text-base: 1rem;
+      --text-lg: 1.125rem; --text-xl: 1.375rem; --text-2xl: 1.75rem;
+
+      --space-1: 4px;  --space-2: 8px;  --space-3: 12px;
+      --space-4: 16px; --space-5: 24px; --space-6: 32px;
+      --space-8: 48px;
+
+      --radius-sm: 6px;  --radius-md: 10px;
+      --radius-lg: 16px; --radius-xl: 20px;
+    }
+
+    /* ===== BASE ===== */
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      color: var(--ink-primary);
+      background: var(--bg-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3 { font-weight: 600; line-height: 1.25; margin: 0; }
+    h1 { font-size: var(--text-2xl); }
+    h2 { font-size: var(--text-xl); }
+    button { font: inherit; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+
+    /* ===== SHELL ===== */
+    .app-shell {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: 100vh;
+    }
+    .sidebar {
+      background: var(--bg-subtle);
+      border-right: 1px solid var(--border);
+      padding: var(--space-5) var(--space-3);
+    }
+    .sidebar .brand {
+      padding: 0 12px 24px;
+      font-weight: 600;
+    }
+    .sidebar .brand small {
+      font-size: 12px;
+      color: var(--ink-tertiary);
+      display: block;
+      font-weight: 400;
+    }
+    .sidebar nav a {
+      display: block;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      color: var(--ink-secondary);
+      margin-bottom: var(--space-1);
+    }
+    .sidebar nav a.active {
+      background: var(--bg-elevated);
+      color: var(--ink-primary);
+      font-weight: 500;
+      border-left: 3px solid var(--sage);
+    }
+    .main {
+      padding: var(--space-6);
+      max-width: 1280px;
+    }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 767px) {
+      .app-shell { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        display: flex; justify-content: space-around;
+        padding: var(--space-2);
+        z-index: 100;
+      }
+      .sidebar .brand { display: none; }
+      .sidebar nav { display: flex; width: 100%; justify-content: space-around; }
+      .sidebar nav a { margin: 0; padding: var(--space-2); text-align: center; font-size: var(--text-xs); }
+      .main { padding: var(--space-4); padding-bottom: 80px; }
+    }
+
+    /* ===== COMPONENTS (empty · fill ตาม 05_BUILD_ORDER.md) ===== */
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="modal-root"></div>
+  <div id="toast-root"></div>
+
+  <script type="module">
+    // ==========================================================
+    // RTM Hub · Single HTML skeleton
+    // อ่านก่อนแก้: 00_MASTER_SPEC.md · 01_DATA_MODEL.md · 04_APP_SKELETON.md
+    // ==========================================================
+
+    // ===== FIREBASE (จาก CDN · โหลดตอน Step 1) =====
+    // Step 0 ไม่ต้อง import firebase — ยังไม่ใช้
+    // Step 1 เปิด block ล่างนี้:
+    //
+    // import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    // import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged }
+    //   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    // import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+    //          onSnapshot, query, where, orderBy, serverTimestamp }
+    //   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    //
+    // const firebaseConfig = window.__RTM_FIREBASE_CONFIG__;
+    // const app = initializeApp(firebaseConfig);
+    // export const auth = getAuth(app);
+    // export const db = getFirestore(app);
+    // export const TENANT_ID = "rtm-bkk-central";
+    // export const DC_ID = "bkk-central";
+
+    // ===== HTML TEMPLATE + ESCAPE =====
+    const escape = s => String(s ?? "").replace(/[&<>"']/g,
+      c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+    const html = (strings, ...values) => strings.reduce((acc, str, i) => {
+      const v = values[i];
+      if (v == null) return acc + str;
+      if (Array.isArray(v)) return acc + str + v.join("");
+      if (typeof v === "object" && v.__raw) return acc + str + v.__raw;
+      return acc + str + escape(v);
+    }, "");
+
+    const raw = s => ({ __raw: s });
+
+    // ===== STORE (pub/sub) =====
+    const state = {
+      auth: { user: null, ready: false },
+      route: { path: "/ideas", params: {} },
+      ideas: [], projects: [], users: [], activeSession: null,
+      currentProject: null, myActions: [], lessons: [],
+      modal: null, toasts: [],
+    };
+    const subs = new Map();
+
+    const store = {
+      get: key => state[key],
+      set(key, value) {
+        state[key] = value;
+        (subs.get(key) || []).forEach(fn => fn(value));
+      },
+      subscribe(key, fn) {
+        if (!subs.has(key)) subs.set(key, new Set());
+        subs.get(key).add(fn);
+        return () => subs.get(key).delete(fn);
+      },
+      _debug: () => ({ ...state }),
+    };
+
+    // ===== ROUTER (hash) =====
+    const routes = [];
+    let currentCleanup = null;
+
+    const route = (pattern, view) => routes.push({ pattern, view });
+
+    const matchRoute = hash => {
+      const path = hash.replace(/^#/, "") || "/ideas";
+      for (const { pattern, view } of routes) {
+        const parts = pattern.split("/"), got = path.split("/");
+        if (parts.length !== got.length) continue;
+        const params = {};
+        const ok = parts.every((p, i) =>
+          p.startsWith(":") ? (params[p.slice(1)] = got[i], true) : p === got[i]);
+        if (ok) return { view, params, path };
+      }
+      return null;
+    };
+
+    const renderRoute = () => {
+      if (typeof currentCleanup === "function") currentCleanup();
+      const m = matchRoute(location.hash);
+      store.set("route", { path: m?.path || "404", params: m?.params || {} });
+      currentCleanup = m ? m.view(m.params) : renderNotFound();
+    };
+
+    const renderNotFound = () => {
+      const el = document.querySelector("#route-outlet");
+      if (el) el.innerHTML =
+        `<div style="padding:48px;text-align:center;color:var(--ink-secondary)">404 · ไม่พบหน้านี้</div>`;
+      return null;
+    };
+
+    const go = path => { location.hash = path; };
+
+    // ===== SHELL =====
+    const NAV = [
+      { href: "#/ideas",   icon: "💡", label: "Ideas" },
+      { href: "#/decide",  icon: "🎯", label: "Decide" },
+      { href: "#/live",    icon: "🚀", label: "Live" },
+      { href: "#/my",      icon: "📅", label: "My Week" },
+      { href: "#/team",    icon: "👥", label: "Team" },
+      { href: "#/lessons", icon: "📚", label: "Lessons" },
+    ];
+
+    let shellSubscribed = false;
+    const mountShell = () => {
+      const currentPath = "#" + store.get("route").path;
+      document.querySelector("#app").innerHTML = html`
+        <div class="app-shell">
+          <aside class="sidebar">
+            <div class="brand">RTM Hub<small>bkk-central</small></div>
+            <nav>
+              ${NAV.map(n => `<a href="${n.href}" class="${currentPath.startsWith(n.href) ? "active" : ""}">${n.icon} ${n.label}</a>`)}
+            </nav>
+          </aside>
+          <main class="main" id="route-outlet">
+            <div style="color:var(--ink-tertiary)">loading...</div>
+          </main>
+        </div>
+      `;
+      if (!shellSubscribed) {
+        shellSubscribed = true;
+        store.subscribe("route", () => mountShell());
+      }
+    };
+
+    // ===== STUB VIEWS (ใส่จริงตาม 05_BUILD_ORDER.md) =====
+    const stub = name => () => {
+      const el = document.querySelector("#route-outlet");
+      if (el) el.innerHTML = `<h1>${name}</h1><p style="color:var(--ink-tertiary)">TODO · build ตาม 05_BUILD_ORDER.md</p>`;
+      return () => {}; // cleanup noop
+    };
+
+    route("/ideas",    stub("💡 Idea Wall"));
+    route("/decide",   stub("🎯 Decision Board"));
+    route("/live",     stub("🚀 Live Projects"));
+    route("/live/:id", p => stub(`🚀 Project ${p.id}`)());
+    route("/my",       stub("📅 My Week"));
+    route("/team",     stub("👥 Team Board"));
+    route("/lessons",  stub("📚 Lessons"));
+
+    // ===== BOOT =====
+    mountShell();
+    window.addEventListener("hashchange", renderRoute);
+    renderRoute();
+
+    // Expose for debug ใน console
+    window.__RTM = { store, go, state };
+  </script>
+</body>
+</html>
