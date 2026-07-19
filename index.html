@@ -914,6 +914,58 @@
     .rtm-ci-text { font-size: var(--text-sm); white-space: pre-line; }
     .rtm-ci-blocker { margin-top: var(--space-3); color: var(--danger-fg); font-size: var(--text-sm); background: var(--terra-soft); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); }
     .rtm-ci-empty { color: var(--ink-secondary); font-size: var(--text-sm); }
+    /* ===== LESSONS + AUTO-SURFACE (Step 8) ===== */
+    .rtm-lesson-search { margin: var(--space-4) 0 var(--space-2); }
+    .rtm-lesson-search input {
+      width: 100%; padding: 12px 16px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-md);
+      background: var(--bg-elevated); font: inherit; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .rtm-lesson-search input:focus { border-color: var(--sage); box-shadow: 0 0 0 3px var(--sage-soft); }
+    .rtm-lesson-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: var(--space-3);
+    }
+    .rtm-lesson-card {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-left: 3px solid var(--sage);
+      border-radius: var(--radius-md); padding: var(--space-4);
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(44,42,38,.04));
+      display: flex; flex-direction: column; gap: var(--space-2);
+    }
+    .rtm-lesson-head { display: flex; align-items: baseline; gap: var(--space-2); justify-content: space-between; flex-wrap: wrap; }
+    .rtm-lesson-title { font-weight: var(--fw-semibold); font-size: var(--text-lg); color: var(--ink-primary); }
+    .rtm-lesson-date { font-size: var(--text-xs); color: var(--ink-tertiary); white-space: nowrap; }
+    .rtm-lesson-deliv { font-size: var(--text-sm); color: var(--ink-secondary); }
+    .rtm-lesson-text { font-size: var(--text-base); line-height: var(--lh-relaxed); color: var(--ink-primary); }
+    .rtm-lesson-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rtm-tag-chip {
+      padding: 2px 10px; border-radius: 999px; font-size: var(--text-xs);
+      background: var(--sage-soft); color: var(--good-fg);
+    }
+    .rtm-lesson-impact { font-size: var(--text-sm); color: var(--ink-secondary); }
+    .rtm-lesson-open {
+      align-self: flex-start; font-size: var(--text-sm); color: var(--good-fg);
+      text-decoration: none; font-weight: var(--fw-medium); margin-top: var(--space-1);
+    }
+    .rtm-lesson-open:hover { text-decoration: underline; }
+
+    .rtm-surface {
+      display: flex; align-items: center; gap: var(--space-3);
+      background: var(--peach-soft); border: 1px solid var(--peach);
+      border-radius: var(--radius-md); padding: 10px 14px;
+      margin-bottom: var(--space-2);
+      animation: rtm-surface-in 0.2s ease;
+    }
+    @keyframes rtm-surface-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+    .rtm-surface-txt { font-size: var(--text-sm); color: var(--warn-fg); }
+    .rtm-surface-link { margin-left: auto; font-size: var(--text-sm); font-weight: var(--fw-medium); color: var(--warn-fg); text-decoration: none; white-space: nowrap; }
+    .rtm-surface-link:hover { text-decoration: underline; }
+    .rtm-surface-x { color: var(--warn-fg); opacity: 0.6; padding: 2px 6px; font-size: var(--text-sm); }
+    .rtm-surface-x:hover { opacity: 1; }
+    @media (prefers-reduced-motion: reduce) { .rtm-surface { animation: none; } }
+
   </style>
 </head>
 <body>
@@ -973,6 +1025,8 @@
     }, "");
 
     const raw = s => ({ __raw: s });
+
+    const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
 
     const fmtRelTime = (ts) => {
       if (!ts) return "";
@@ -1470,6 +1524,47 @@
       await writeLesson({ ...project, ...closing });
     };
 
+    // Step 8: read-side. writeLesson() (Step 5) already writes lessons/ on close.
+    const subscribeLessons = () => {
+      const q = query(collection(db, "lessons"), orderBy("closed_at", "desc"));
+      return onSnapshot(q, snap => {
+        const list = [];
+        snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+        store.set("lessons", list);
+      }, err => console.error("subscribeLessons:", err));
+    };
+
+    // haystack for a lesson = title + text + tags (lowercased)
+    const lessonText = (l) => [l.project_title, l.lesson_text, ...(l.tags || [])].join(" ").toLowerCase();
+
+    // Lessons view search: substring of the whole query + optional tag chip
+    const searchLessons = (queryStr, tag) => {
+      const q = String(queryStr || "").trim().toLowerCase();
+      return (store.get("lessons") || []).filter(l => {
+        if (tag && !(l.tags || []).includes(tag)) return false;
+        if (!q) return true;
+        return lessonText(l).includes(q);
+      });
+    };
+
+    // Auto-surface: tokenize the typed idea, match if ANY token (≥3 chars) hits a lesson
+    const LESSON_TOKEN_MIN = 3;
+    const matchLessons = (phrase) => {
+      const toks = String(phrase || "").toLowerCase().split(/[\s,./|·]+/).filter(t => t.length >= LESSON_TOKEN_MIN);
+      if (!toks.length) return [];
+      return (store.get("lessons") || []).filter(l => {
+        const t = lessonText(l);
+        return toks.some(tok => t.includes(tok));
+      });
+    };
+
+    const projectById = (id) => (store.get("projects") || []).find(p => p.id === id) || null;
+    const allLessonTags = () => {
+      const set = new Set();
+      (store.get("lessons") || []).forEach(l => (l.tags || []).forEach(t => set.add(t)));
+      return [...set].sort();
+    };
+
     // ===== DERIVED · project summary =====
     const milestoneDisplayStatus = (acts) => {
       if (acts.length === 0) return "empty";
@@ -1505,17 +1600,20 @@
         <div class="rtm-quick-add">
           <input id="idea-input" placeholder="พิมพ์ไอเดีย... กด Enter เพื่อโยน" autocomplete="off" maxlength="200" />
         </div>
+        <div id="auto-surface" aria-live="polite"></div>
         <div class="rtm-filter-row" id="filter-row"></div>
         <div id="ideas-list"></div>
       `;
 
       const input = document.querySelector("#idea-input");
+      const surfaceEl = document.querySelector("#auto-surface");
       input.focus();
       input.addEventListener("keydown", async (e) => {
         if (e.key !== "Enter") return;
         const val = input.value.trim();
         if (!val) return;
         input.value = "";
+        if (surfaceEl) surfaceEl.innerHTML = "";
         input.disabled = true;
         try { await createIdea(val); }
         catch (err) {
@@ -1526,6 +1624,23 @@
         input.disabled = false;
         input.focus();
       });
+
+      // Auto-surface (North Star §10): typing an idea surfaces related old lessons.
+      // Non-blocking · debounced · dismissible. Kill Test: >3 no-click = noise.
+      const runSurface = debounce((val) => {
+        if (!surfaceEl) return;
+        const matches = matchLessons(val);
+        if (!matches.length) { surfaceEl.innerHTML = ""; return; }
+        surfaceEl.innerHTML = html`
+          <div class="rtm-surface">
+            <span class="rtm-surface-txt">📚 เคยทำคล้ายกัน <b>${String(matches.length)}</b> ครั้ง — เช็คก่อนเริ่ม</span>
+            <a class="rtm-surface-link" href="#/lessons">ดู →</a>
+            <button class="rtm-surface-x" title="ปิด" aria-label="ปิด">✕</button>
+          </div>
+        `;
+        surfaceEl.querySelector(".rtm-surface-x")?.addEventListener("click", () => { surfaceEl.innerHTML = ""; });
+      }, 500);
+      input.addEventListener("input", () => runSurface(input.value));
 
       const renderAll = () => {
         renderSessionBar();
@@ -2771,6 +2886,91 @@
         </div>`)}`;
     };
 
+    // ===== VIEW · lessons =====
+    const viewLessons = () => {
+      const outlet = document.querySelector("#route-outlet");
+      let q = "";
+      let tag = null;
+      outlet.innerHTML = html`
+        <h1>📚 Lessons Library</h1>
+        <p style="color:var(--ink-secondary);margin-top:8px">บทเรียนจาก project ที่ปิดแล้ว · ค้นก่อนเริ่มของใหม่ = ไม่พลาดซ้ำ</p>
+        <div class="rtm-lesson-search">
+          <input id="lesson-search" placeholder="🔍 ค้นหา keyword / tag..." autocomplete="off" maxlength="120" />
+        </div>
+        <div class="rtm-filter-row" id="lesson-tags"></div>
+        <div id="lessons-list" style="margin-top:16px"></div>
+      `;
+
+      const searchEl = outlet.querySelector("#lesson-search");
+      searchEl.addEventListener("input", () => { q = searchEl.value; renderList(); });
+
+      const renderTags = () => {
+        const el = outlet.querySelector("#lesson-tags");
+        if (!el) return;
+        const tags = allLessonTags();
+        if (!tags.length) { el.innerHTML = ""; return; }
+        el.innerHTML = html`
+          <button class="rtm-pill ${tag === null ? 'active' : ''}" data-tag="">ทั้งหมด</button>
+          ${tags.map(t => html`<button class="rtm-pill ${tag === t ? 'active' : ''}" data-tag="${t}">${t}</button>`)}
+        `;
+        el.querySelectorAll("[data-tag]").forEach(b => b.addEventListener("click", () => {
+          tag = b.dataset.tag || null; renderTags(); renderList();
+        }));
+      };
+
+      const renderList = () => {
+        const el = outlet.querySelector("#lessons-list");
+        if (!el) return;
+        if (!(store.get("lessons") || []).length) {
+          el.innerHTML = html`<div class="rtm-empty">ยังไม่มี lesson — ปิด project พร้อมเขียน lesson แล้วจะโผล่ที่นี่</div>`;
+          return;
+        }
+        const list = searchLessons(q, tag);
+        if (!list.length) {
+          el.innerHTML = html`<div class="rtm-empty">ไม่พบ lesson ที่เกี่ยวข้อง — ไอเดียนี้เป็นเรื่องใหม่ของทีม</div>`;
+          return;
+        }
+        el.innerHTML = html`<div class="rtm-lesson-grid">${list.map(renderLessonCard)}</div>`;
+      };
+
+      const renderAll = () => { renderTags(); renderList(); };
+      renderAll();
+
+      const unsubs = [
+        store.subscribe("lessons", renderAll),
+        store.subscribe("projects", renderList),
+        store.subscribe("users", renderList),
+      ];
+      return () => unsubs.forEach(u => u());
+    };
+
+    const renderLessonCard = (l) => {
+      const p = projectById(l.project_id);
+      const deliv = DELIVERABLE_LABELS[l.deliverable_type] || l.deliverable_type || "—";
+      let impactRow = "";
+      if (p && p.impact_actual_value != null) {
+        const good = p.impact_actual_value >= (p.impact_projected_value ?? 0);
+        const proj = p.impact_projected_value != null
+          ? ` <span style="color:var(--ink-tertiary)">(projected ${escape(p.impact_projected_value)} ${escape(p.impact_projected_unit || "")})</span>`
+          : "";
+        impactRow = `<div class="rtm-lesson-impact">Actual: <b style="color:${good ? "var(--good-fg)" : "var(--danger-fg)"}">${escape(p.impact_actual_value)} ${escape(p.impact_actual_unit || "")}</b>${proj}</div>`;
+      }
+      const tags = (l.tags || []).map(t => `<span class="rtm-tag-chip">${escape(t)}</span>`).join("");
+      return html`
+        <div class="rtm-lesson-card">
+          <div class="rtm-lesson-head">
+            <span class="rtm-lesson-title">${l.project_title}</span>
+            <span class="rtm-lesson-date">closed ${fmtDate(l.closed_at)}</span>
+          </div>
+          <div class="rtm-lesson-deliv">${deliv}</div>
+          <div class="rtm-lesson-text">💡 ${l.lesson_text}</div>
+          ${tags ? raw(`<div class="rtm-lesson-tags">${tags}</div>`) : ""}
+          ${raw(impactRow)}
+          ${p ? raw(`<a class="rtm-lesson-open" href="#/live/${escape(l.project_id)}">→ เปิด project</a>`) : ""}
+        </div>
+      `;
+    };
+
     // ===== STUB VIEWS =====
     const stub = name => () => {
       const el = document.querySelector("#route-outlet");
@@ -2784,7 +2984,7 @@
     route("/live/:id", viewProject);
     route("/my",       viewMy);
     route("/team",     viewTeam);
-    route("/lessons",  stub("📚 Lessons"));
+    route("/lessons",  viewLessons);
 
     // ===== MODAL · session-start =====
     const renderSessionStartModal = () => html`
@@ -3351,6 +3551,7 @@
         subscribeAllMilestones();
         subscribeAllActions();
         subscribeAllCheckins();
+        subscribeLessons();
         store.subscribe("modal", mountModal);
         mountModal();
       }
@@ -3391,7 +3592,9 @@
     window.__RTM = { store, go, state, auth, db,
       viewTeam, teamMembers, activeActionsOf, checkinFor, isoWeekStr, uiTeam,
       renderTeamMatrix, renderTeamAlerts, renderTeamHighlights, renderTeamCheckin,
-      renderPromoteModal };
+      renderPromoteModal,
+      viewIdeas, viewLessons, renderLessonCard, subscribeLessons, searchLessons, matchLessons,
+      projectById, allLessonTags };
   </script>
 </body>
 </html>
